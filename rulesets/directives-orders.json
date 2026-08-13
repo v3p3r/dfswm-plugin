@@ -1,0 +1,165 @@
+{
+  "id": "dfswm.directives-orders",
+  "title": "Directives and Orders",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 12",
+  "chapter": "12",
+  "notes": "Operation Orders follow the standard 5-paragraph format; Warning Orders precede them; Fragmentary Orders follow other orders.",
+  "rules": [
+    {
+      "id": "ord.characteristics",
+      "title": "Orders must be accurate, brief but clear, unambiguous, capable of execution and timely",
+      "description": "Orders and instructions must be accurate; brief but clear; unambiguous; capable of execution; and received in time to be acted upon correctly.",
+      "chapter": "12",
+      "paragraphs": "1203",
+      "severity": "error",
+      "appliesTo": ["warning-order", "operation-order", "admin-order", "fragmentary-order"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "The order as a whole.",
+        "params": { "rule": "style-characteristics" }
+      },
+      "manual": true
+    },
+    {
+      "id": "ord.warning-order-heading",
+      "title": "A Warning Order must be clearly defined as such",
+      "description": "A Warning Order is to be clearly defined as such and should include: the scope of the operation and probable tasks or moves; the earliest time at which recipients will be required to act and the degree of notice; details of necessary preparations; and when and how detailed orders will be issued.",
+      "chapter": "12",
+      "paragraphs": "1220",
+      "severity": "error",
+      "appliesTo": ["warning-order"],
+      "check": {
+        "type": "regex",
+        "scope": "subject-heading",
+        "where": "Subject heading or first line of the order.",
+        "params": { "pattern": "WARNING ORDER|WNGO", "expect": "present" }
+      }
+    },
+    {
+      "id": "ord.warning-order-contents",
+      "title": "Warning Orders include scope, notice, preparations and issue details",
+      "description": "A Warning Order should include the scope of the operation and probable tasks, the earliest time of action and degree of notice, details of preparations, and when/how detailed orders will be issued.",
+      "chapter": "12",
+      "paragraphs": "1220",
+      "severity": "warning",
+      "appliesTo": ["warning-order"],
+      "check": {
+        "type": "required-element",
+        "scope": "body",
+        "where": "Body of the Warning Order.",
+        "params": { "elements": ["scope", "degree-of-notice", "preparations", "detailed-orders-issue"] }
+      }
+    },
+    {
+      "id": "ord.warning-order-acknowledgement",
+      "title": "Warning Orders should require acknowledgement",
+      "description": "It is advisable to require a warning order to be acknowledged.",
+      "chapter": "12",
+      "paragraphs": "1221",
+      "severity": "info",
+      "appliesTo": ["warning-order"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "End of the Warning Order.",
+        "params": { "pattern": "ACKNOWLEDGE|acknowledge", "expect": "present" }
+      }
+    },
+    {
+      "id": "ord.oporder-format",
+      "title": "Operation Orders use the 5-paragraph format in order",
+      "description": "Operation Orders follow the format: 1. SITUATION, 2. MISSION, 3. EXECUTION, 4. SERVICE SUPPORT, 5. COMMAND AND SIGNAL.",
+      "chapter": "12",
+      "paragraphs": "Table 12.2",
+      "severity": "error",
+      "appliesTo": ["operation-order"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "Main headings of the order.",
+        "params": {
+          "rule": "mandatory-sequence",
+          "mandatory": ["SITUATION", "MISSION", "EXECUTION", "SERVICE SUPPORT", "COMMAND AND SIGNAL"],
+          "order": true
+        }
+      }
+    },
+    {
+      "id": "ord.concept-of-operations",
+      "title": "The Concept of Operations states Intent, scheme of manoeuvre and Main Effort",
+      "description": "Within the Concept of Operations the Commander must state the formation/unit concerned and his Intent, include a succinct summary of his scheme of manoeuvre, and state his Main Effort.",
+      "chapter": "12",
+      "paragraphs": "12B-3",
+      "severity": "error",
+      "appliesTo": ["operation-order"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "Concept of Operations paragraph.",
+        "params": { "rule": "conops-elements", "mandatory": ["Intent", "scheme of manoeuvre", "Main Effort"] }
+      }
+    },
+    {
+      "id": "ord.mission-statement",
+      "title": "Missions are clear, concise statements of task and purpose",
+      "description": "The mission is a clear, concise statement of the task of the command and its purpose. Where a number of tasks are required they must be linked by a singular, unifying purpose.",
+      "chapter": "12",
+      "paragraphs": "12B-3b",
+      "severity": "warning",
+      "appliesTo": ["operation-order"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Mission paragraphs.",
+        "params": { "pattern": "is to\\b", "expect": "present" }
+      }
+    },
+    {
+      "id": "ord.imperative-verbs",
+      "title": "Missions and tasks use the imperative 'is to' or 'are to'",
+      "description": "'Is to' or 'are to' (imperative) convey a direct order; the infinitive 'to' expresses an aim, mission or intention; 'should' may be used only where the commander on the spot is allowed initiative or discretion.",
+      "chapter": "2",
+      "paragraphs": "261",
+      "severity": "warning",
+      "appliesTo": ["operation-order", "admin-order"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Task and mission statements.",
+        "params": { "pattern": "\\b(is to|are to)\\b", "expect": "present" }
+      },
+      "notes": "Heuristic: mission statements should express the task in the imperative. 'Should' should only appear where subordinate initiative is intended."
+    },
+    {
+      "id": "ord.copy-number",
+      "title": "All operation and administrative/logistics orders are copy numbered",
+      "description": "All operation and administrative/logistics orders, whatever their security classification, are given a copy number in the same way as TS/SECRET documents.",
+      "chapter": "2",
+      "paragraphs": "255",
+      "severity": "error",
+      "appliesTo": ["operation-order", "admin-order", "warning-order", "fragmentary-order"],
+      "check": {
+        "type": "copy-number",
+        "scope": "first-page",
+        "where": "Top right of the first page.",
+        "params": { "requiredIf": "order" }
+      }
+    },
+    {
+      "id": "ord.time-zone-phrase",
+      "title": "Orders state the time zone used throughout",
+      "description": "In estimates and orders where the format includes the phrase 'Time Zone Used Throughout the Order (Estimates): ...', times in the text do not require a zone suffix.",
+      "chapter": "2",
+      "paragraphs": "274",
+      "severity": "info",
+      "appliesTo": ["operation-order", "admin-order", "warning-order"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Order header area.",
+        "params": { "pattern": "Time Zone Used Throughout", "expect": "present" }
+      }
+    }
+  ]
+}

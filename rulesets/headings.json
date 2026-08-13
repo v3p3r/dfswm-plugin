@@ -1,0 +1,137 @@
+{
+  "id": "dfswm.headings",
+  "title": "Headings Hierarchy & Conventions",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 2",
+  "chapter": "2",
+  "notes": "Rules for the five heading levels: subject, main, group, paragraph and sub-paragraph headings.",
+  "rules": [
+    {
+      "id": "hdg.subject",
+      "title": "Subject heading: centred, bold capitals, no full stop",
+      "description": "Most documents start with a subject heading placed centrally in bold capitals, not followed by a full stop.",
+      "chapter": "2",
+      "paragraphs": "209",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "subject-heading",
+        "where": "The first heading of the document.",
+        "params": { "alignment": "center", "bold": true, "caps": true, "noTrailingFullStop": true }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Centre the subject heading, make it bold capitals, and remove any trailing full stop."
+      }
+    },
+    {
+      "id": "hdg.main",
+      "title": "Main heading: centred, bold capitals, 2 points larger",
+      "description": "A main heading is placed centrally over the typed area in bold capitals, not followed by a full stop, and is 2 points larger than the body text.",
+      "chapter": "2",
+      "paragraphs": "210",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "main-heading",
+        "where": "Main headings dividing major sections.",
+        "params": { "alignment": "center", "bold": true, "caps": true, "sizeOffsetPoints": 2, "noTrailingFullStop": true }
+      }
+    },
+    {
+      "id": "hdg.group",
+      "title": "Group heading: left margin, bold capitals, not numbered",
+      "description": "A group heading occupies a line by itself beginning at the left-hand margin, is not numbered and is not followed by a full stop. It is in bold capitals.",
+      "chapter": "2",
+      "paragraphs": "211",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "group-heading",
+        "where": "Group headings introducing one or more paragraphs on the same subject.",
+        "params": { "alignment": "left", "bold": true, "caps": true, "numbered": false, "noTrailingFullStop": true }
+      }
+    },
+    {
+      "id": "hdg.paragraph",
+      "title": "Paragraph heading: bold, initial capitals, followed by full stop",
+      "description": "A paragraph heading is bold, uses capitals for the initial letters of all words except unimportant ones ('of', 'and', 'to', 'the', 'from'), and is followed by a full stop.",
+      "chapter": "2",
+      "paragraphs": "212",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "paragraph-heading",
+        "where": "Paragraph headings covering a single paragraph and its sub-paragraphs.",
+        "params": { "bold": true, "titleCase": true, "trailingFullStop": true }
+      }
+    },
+    {
+      "id": "hdg.consistency",
+      "title": "Once a paragraph heading is used, subsequent paragraphs must be headed",
+      "description": "Once a paragraph heading is used, succeeding paragraphs down to the next main or group heading must have headings.",
+      "chapter": "2",
+      "paragraphs": "212",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "element-order",
+        "scope": "paragraph-heading",
+        "where": "Sequence of paragraphs between main/group headings.",
+        "params": { "rule": "no-unheaded-paragraph-after-headed" }
+      }
+    },
+    {
+      "id": "hdg.standalone",
+      "title": "Headings must stand alone and not form part of a sentence",
+      "description": "Headings should stand on their own and not form part of any sentence that follows.",
+      "chapter": "2",
+      "paragraphs": "208",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "heading",
+        "where": "Heading text immediately followed by sentence continuation in the same paragraph.",
+        "params": {
+          "pattern": "^[A-Z][A-Za-z ]+\\.[a-z]",
+          "expect": "absent"
+        }
+      },
+      "notes": "Heuristic: flags headings whose first word after the full stop is lower case, suggesting the heading is embedded in a sentence."
+    },
+    {
+      "id": "hdg.two-line",
+      "title": "Two-line headings: second line shorter and centred",
+      "description": "In a 2-line main heading, if one line is necessarily shorter than the other, the second line is to be the shorter and placed centrally under the first.",
+      "chapter": "2",
+      "paragraphs": "210",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "main-heading",
+        "where": "Main headings spanning two lines.",
+        "params": { "rule": "second-line-shorter-centred" }
+      }
+    },
+    {
+      "id": "hdg.sub-paragraph",
+      "title": "Sub-paragraph headings follow paragraph heading rules",
+      "description": "Sub-paragraph headings, and those of any further sub-divisions, follow rules similar to those for paragraph headings.",
+      "chapter": "2",
+      "paragraphs": "213",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "heading-style",
+        "scope": "heading",
+        "where": "Sub-paragraph and deeper headings.",
+        "params": { "bold": true, "titleCase": true, "trailingFullStop": true }
+      }
+    }
+  ]
+}

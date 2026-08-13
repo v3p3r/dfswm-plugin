@@ -1,0 +1,188 @@
+{
+  "id": "dfswm.signal-message",
+  "title": "Signal Message Writing",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 4",
+  "chapter": "4",
+  "notes": "Signal messages use Form J/Sigs/84 (Annex A to Chapter 4).",
+  "rules": [
+    {
+      "id": "sig.all-caps",
+      "title": "Signal message text is in capital letters throughout",
+      "description": "Capital letters are used for every letter in and outside the text, equally for handwritten and typewritten messages.",
+      "chapter": "4",
+      "paragraphs": "412",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "all-caps",
+        "scope": "all",
+        "where": "Entire message text.",
+        "params": { "expected": true }
+      }
+    },
+    {
+      "id": "sig.precedence-valid",
+      "title": "Precedence must be FLASH, IMMEDIATE, PRIORITY or ROUTINE",
+      "description": "The four degrees of precedence given to messages are FLASH, IMMEDIATE, PRIORITY and ROUTINE.",
+      "chapter": "4",
+      "paragraphs": "414",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "precedence-marking",
+        "scope": "all",
+        "where": "Precedence line of the message form.",
+        "params": { "allowed": ["FLASH", "IMMEDIATE", "PRIORITY", "ROUTINE"] }
+      }
+    },
+    {
+      "id": "sig.dtg-format",
+      "title": "DTG must use the format DDHHMM zone month year",
+      "description": "A DTG consists of 3 pairs of digits (date, hour, minutes) followed by a time zone suffix letter, the first 3 letters of the month and the last 2 figures of the year, e.g. 051230C Mar 23.",
+      "chapter": "4",
+      "paragraphs": "418",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "dtg-format",
+        "scope": "all",
+        "where": "Date Time Group on the message.",
+        "params": { "pattern": "^\\d{6}[A-Z] [A-Za-z]{3} \\d{2}$" }
+      },
+      "notes": "The manual instructs that the first 3 letters of the month be in capitals but its own examples use title case (e.g. 051230C Mar 23); the pattern accepts both."
+    },
+    {
+      "id": "sig.dtg-inserted-on-release",
+      "title": "DTG is inserted by the releasing officer after signature",
+      "description": "It is the responsibility of the releasing officer to insert the DTG after he/she signs the message.",
+      "chapter": "4",
+      "paragraphs": "418",
+      "severity": "info",
+      "appliesTo": ["signal"],
+      "manual": true,
+      "check": {
+        "type": "dtg-format",
+        "scope": "signature-block",
+        "where": "Signature block of the message.",
+        "params": { "rule": "dtg-after-signature" }
+      }
+    },
+    {
+      "id": "sig.zone-time",
+      "title": "GMT is used for messages crossing time zones or including addressees outside Kenya",
+      "description": "GMT (suffix) is used for messages that pass from one time zone to another, whose text relates to another time zone, or that include any addressee outside Kenya.",
+      "chapter": "4",
+      "paragraphs": "419",
+      "severity": "warning",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "dtg-format",
+        "scope": "all",
+        "where": "DTG zone suffix.",
+        "params": { "pattern": "^\\d{6}[A-Z] [A-Za-z]{3} \\d{2}$", "rule": "gmt-for-inter-zone" }
+      },
+      "notes": "Heuristic; requires knowledge of addressees."
+    },
+    {
+      "id": "sig.address-capitals",
+      "title": "Addresses in signal messages are in capitals with spaces between words",
+      "description": "Capital letters are used throughout; spaces are left between words and between letters and figures, but no spaces between letters of an abbreviation.",
+      "chapter": "4",
+      "paragraphs": "420",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "all-caps",
+        "scope": "all",
+        "where": "Address component of the message.",
+        "params": { "expected": true, "spaces": true }
+      }
+    },
+    {
+      "id": "sig.address-authorized-titles",
+      "title": "Addresses must use authorized abbreviated titles",
+      "description": "The authorized abbreviated titles for commands, formations, bases, units and establishments shown at Annex B to Chapter 16 are to be used in the address.",
+      "chapter": "4",
+      "paragraphs": "420a",
+      "severity": "warning",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "all",
+        "where": "Address component.",
+        "params": { "rule": "authorized-titles-only", "source": "ch16-annexB" }
+      }
+    },
+    {
+      "id": "sig.multiple-address-action-info",
+      "title": "Multiple address messages indicate ACTION and INFORMATION addressees",
+      "description": "In a multiple address message each addressee must be indicated as 'ACTION' or 'INFORMATION'.",
+      "chapter": "4",
+      "paragraphs": "406",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "Address component.",
+        "params": { "keyword": "ACTION|INFORMATION", "whenMultipleAddress": true }
+      }
+    },
+    {
+      "id": "sig.book-message",
+      "title": "Book messages carry the word BOOK in message instructions",
+      "description": "For a book message, 'BOOK' is to be inserted in the 'MESSAGE INSTRUCTIONS' box on the message form.",
+      "chapter": "4",
+      "paragraphs": "407",
+      "severity": "info",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "Message instructions box.",
+        "params": { "keyword": "BOOK", "whenBookMessage": true }
+      }
+    },
+    {
+      "id": "sig.exercise-identification",
+      "title": "Exercise messages are identified by the word EXERCISE",
+      "description": "Exercise messages are identified by the word 'EXERCISE' followed by the exercise identification, inserted as the first words of the text following the INFO line or privacy marking.",
+      "chapter": "4",
+      "paragraphs": "408",
+      "severity": "warning",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Start of the message text.",
+        "params": { "pattern": "^EXERCISE", "expect": "present" }
+      }
+    },
+    {
+      "id": "sig.drill-identification",
+      "title": "Drill messages begin and end with the word DRILL",
+      "description": "The text of a message intended only for the training of communication personnel is to begin and end with the word 'DRILL'.",
+      "chapter": "4",
+      "paragraphs": "409",
+      "severity": "info",
+      "appliesTo": ["signal"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Start and end of message text.",
+        "params": { "pattern": "^DRILL.*DRILL$", "expect": "present" }
+      }
+    },
+    {
+      "id": "sig.no-names-casualty-exercise",
+      "title": "Casualty exercise messages must not use real personnel names",
+      "description": "In casualty messages used for exercise purposes the names and particulars of serving personnel must NOT be used.",
+      "chapter": "4",
+      "paragraphs": "408",
+      "severity": "error",
+      "appliesTo": ["signal"],
+      "manual": true,
+      "notes": "Human review: names and particulars of serving personnel must NOT be used in exercise casualty messages."
+    }
+  ]
+}

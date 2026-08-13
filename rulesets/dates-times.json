@@ -1,0 +1,135 @@
+{
+  "id": "dfswm.dates-times",
+  "title": "Dates, Times and Date-Time Groups",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapters 2 and 4",
+  "chapter": "2",
+  "notes": "Conventions for expressing dates, time and DTGs in Service writing.",
+  "rules": [
+    {
+      "id": "dt.date-order",
+      "title": "Dates are written day, month, year",
+      "description": "A date is to be written in the order: day, month, year.",
+      "chapter": "2",
+      "paragraphs": "273",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "date-format",
+        "scope": "body",
+        "where": "Full dates in text.",
+        "params": { "pattern": "^\\d{1,2} (January|February|March|April|May|June|July|August|September|October|November|December) \\d{4}$" }
+      }
+    },
+    {
+      "id": "dt.abbreviated-date",
+      "title": "Abbreviated dates use 3-letter month and 2-figure year",
+      "description": "An abbreviated date uses the first 3 letters of the month followed by the last 2 figures of the year, with cardinal numbers for the day, e.g. '1 Jul 23'.",
+      "chapter": "2",
+      "paragraphs": "273",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "date-format",
+        "scope": "body",
+        "where": "Abbreviated dates.",
+        "params": { "pattern": "^\\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{2}$" }
+      }
+    },
+    {
+      "id": "dt.night-format",
+      "title": "Nights are described by both dates over which they extend",
+      "description": "A night is described by both dates over which it extends, e.g. 'night 29/30 Sep' or 'night 30 Sep/1 Oct'.",
+      "chapter": "2",
+      "paragraphs": "273",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "date-format",
+        "scope": "body",
+        "where": "Night references.",
+        "params": { "pattern": "night \\d{1,2}/\\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)" }
+      }
+    },
+    {
+      "id": "dt.24-hour-clock",
+      "title": "Time is expressed on the 24-hour clock in four figures",
+      "description": "Time is expressed in 4 figures by reference to the 24-hour clock; the first pair of figures indicates the hour and the second pair the minutes.",
+      "chapter": "2",
+      "paragraphs": "274",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "time-format",
+        "scope": "body",
+        "where": "Time expressions.",
+        "params": { "pattern": "^\\d{4}$" }
+      }
+    },
+    {
+      "id": "dt.no-12-hour",
+      "title": "The 12-hour clock with am/pm is never used in Defence writing",
+      "description": "While never used in Defence writing, time expressed in terms of the 12-hour clock followed by 'am' or 'pm' is normal in dealings with civilians and social invitations.",
+      "chapter": "2",
+      "paragraphs": "276",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "time-format",
+        "scope": "body",
+        "where": "12-hour clock usage.",
+        "params": { "pattern": "\\d{1,2}:?\\d{2} ?(am|pm|AM|PM)\\b", "expect": "absent" }
+      }
+    },
+    {
+      "id": "dt.no-midnight",
+      "title": "The term 'midnight' is not used; use '0000 hours'",
+      "description": "The term 'midnight' is not used when referring to that precise time; '0000 hours' and the date are used instead.",
+      "chapter": "2",
+      "paragraphs": "275",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Midnight references.",
+        "params": { "pattern": "\\bmidnight\\b", "expect": "absent" }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Replace 'midnight' with '0000 hours'."
+      }
+    },
+    {
+      "id": "dt.dtg-format",
+      "title": "DTGs consist of 6 figures, zone suffix, 3-letter month and 2-figure year",
+      "description": "DTGs are used to give the date and time of origin of signal messages and certain orders; they consist of 6 figures, the first 2 giving the day of the month and the last 4 the time, followed by a time zone suffix, the first 3 letters of the month in capitals and the last 2 digits of the year, e.g. 221415C Aug 20.",
+      "chapter": "2",
+      "paragraphs": "277",
+      "severity": "error",
+      "appliesTo": ["general", "signal"],
+      "check": {
+        "type": "dtg-format",
+        "scope": "body",
+        "where": "DTG references in text and messages.",
+        "params": { "pattern": "^\\d{6}[A-Z]? (JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) \\d{2}$" }
+      }
+    },
+    {
+      "id": "dt.year-in-full",
+      "title": "A year on its own is always written in full",
+      "description": "Where a year appears on its own, it is always to be written in full, e.g. 2013, not 13.",
+      "chapter": "2",
+      "paragraphs": "268a(2)",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "manual": true,
+      "check": {
+        "type": "date-format",
+        "scope": "body",
+        "where": "Standalone year references.",
+        "params": { "pattern": "\\b\\d{2}\\b(?!\\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec))", "expect": "absent" }
+      },
+      "notes": "Heuristic: flags standalone two-digit numbers that may be intended as years; requires human confirmation."
+    }
+  ]
+}

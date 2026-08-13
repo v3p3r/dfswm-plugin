@@ -1,0 +1,252 @@
+{
+  "id": "dfswm.numbering",
+  "title": "Paragraph Numbering Scheme",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 2",
+  "chapter": "2",
+  "notes": "The strict six-level numbering scheme and its exceptions.",
+  "rules": [
+    {
+      "id": "num.level-1",
+      "title": "Paragraphs use Arabic numerals followed by a full stop and tab",
+      "description": "A paragraph has an Arabic number, followed by a full stop and a tab space.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Top-level paragraphs.",
+        "params": { "level": 1, "pattern": "^\\d+\\.\\t" }
+      }
+    },
+    {
+      "id": "num.level-2",
+      "title": "Sub-paragraphs use lower case letters, block indented one tab",
+      "description": "A sub-paragraph is block indented one tab space and has a lower case letter followed by a full stop and tab space.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Sub-paragraphs.",
+        "params": { "level": 2, "pattern": "^[a-z]\\.\\t", "indentTabs": 1 }
+      }
+    },
+    {
+      "id": "num.level-3",
+      "title": "Sub-sub-paragraphs use bracketed Arabic numerals",
+      "description": "A sub-sub-paragraph is block indented another tab space and has an Arabic number in brackets followed by a tab space.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Sub-sub-paragraphs.",
+        "params": { "level": 3, "pattern": "^\\(\\d+\\)\\t", "indentTabs": 2 }
+      }
+    },
+    {
+      "id": "num.level-4",
+      "title": "Sub-sub-sub-paragraphs use bracketed lower case Roman numerals",
+      "description": "A sub-sub-sub-paragraph is block indented another tab space and has a lower case Roman numeral in brackets followed by a tab space.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Sub-sub-sub-paragraphs.",
+        "params": { "level": 4, "pattern": "^\\((i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv)\\)\\t", "indentTabs": 3 }
+      }
+    },
+    {
+      "id": "num.level-5",
+      "title": "Fifth-level paragraphs use lower case Roman numerals followed by tab",
+      "description": "A sub-sub-sub-sub-paragraph is block indented another tab space and has a lower case Roman number followed by a tab space.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Fifth-level sub-paragraphs.",
+        "params": { "level": 5, "pattern": "^(i|ii|iii|iv|v|vi|vii|viii|ix|x)\\.\\t", "indentTabs": 4 }
+      }
+    },
+    {
+      "id": "num.single-para-un-numbered",
+      "title": "A single-paragraph document must not number the paragraph",
+      "description": "If a document has only one paragraph, that paragraph is not numbered and the first line of the next starts at the left margin.",
+      "chapter": "2",
+      "paragraphs": "217",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Documents with exactly one paragraph.",
+        "params": { "rule": "single-paragraph-not-numbered" }
+      }
+    },
+    {
+      "id": "num.no-single-sub-para",
+      "title": "A paragraph must never have a single sub-paragraph",
+      "description": "A paragraph is never to have a single sub-paragraph.",
+      "chapter": "2",
+      "paragraphs": "217",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "no-single-subparagraph",
+        "scope": "body",
+        "where": "Any paragraph containing sub-paragraphs.",
+        "params": {}
+      }
+    },
+    {
+      "id": "num.condolence-un-numbered",
+      "title": "Condolence letter paragraphs are never numbered",
+      "description": "Paragraphs in letters of condolence should never be numbered.",
+      "chapter": "2",
+      "paragraphs": "217",
+      "severity": "error",
+      "appliesTo": ["formal-letter", "routine-letter"],
+      "manual": true,
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Letters of condolence.",
+        "params": { "rule": "never-numbered" }
+      },
+      "notes": "Manual/contextual check: plugin cannot reliably detect a condolence letter; render as checklist item."
+    },
+    {
+      "id": "num.do-letters-un-numbered",
+      "title": "Demi-Official letter paragraphs need not be numbered",
+      "description": "Paragraphs in DO letters need not be numbered.",
+      "chapter": "2",
+      "paragraphs": "217",
+      "severity": "info",
+      "appliesTo": ["demi-official-letter"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "DO letter body.",
+        "params": { "rule": "optional-numbering" }
+      }
+    },
+    {
+      "id": "num.civilian-un-numbered",
+      "title": "Letters to members of the public should not use paragraph numbers",
+      "description": "It would be unusual in letters to members of the public to number paragraphs.",
+      "chapter": "2",
+      "paragraphs": "217, 301",
+      "severity": "warning",
+      "appliesTo": ["routine-letter"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Routine letters to civilians.",
+        "params": { "rule": "prefer-un-numbered" }
+      }
+    },
+    {
+      "id": "num.annex-lettering",
+      "title": "Annexes are lettered alphabetically in capitals",
+      "description": "Annexes are lettered alphabetically in capitals in the order in which they appear in the text; a single annex is lettered Annex A.",
+      "chapter": "2",
+      "paragraphs": "218b",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Annex identification blocks.",
+        "params": { "pattern": "\\bANNEX [A-Z]\\b|\\bAnnex [A-Z]\\b", "expect": "present" }
+      }
+    },
+    {
+      "id": "num.appendix-numbering",
+      "title": "Appendices are numbered consecutively in Arabic numerals",
+      "description": "Appendices are numbered consecutively in Arabic numerals in the order in which they appear; a single appendix is numbered Appendix 1.",
+      "chapter": "2",
+      "paragraphs": "219b",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Appendix identification blocks.",
+        "params": { "pattern": "\\bAPPENDIX \\d+\\b|\\bAppendix \\d+\\b", "expect": "present" }
+      }
+    },
+    {
+      "id": "num.annex-reference-block",
+      "title": "Annexes show the parent document reference at top right of first page",
+      "description": "Annexes show the identifying reference of the main document at the top right hand of the first page so they can be identified if detached.",
+      "chapter": "2",
+      "paragraphs": "218e",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "first-page",
+        "where": "Top right of the first page of each annex.",
+        "params": { "pattern": "^ANNEX [A-Z] TO\\n", "expect": "present" }
+      },
+      "notes": "Evaluator must apply the pattern line-wise (MULTILINE) to the first page text, since the reference block occupies its own line."
+    },
+    {
+      "id": "num.annex-listing",
+      "title": "Annexes must be listed at the close of the parent document",
+      "description": "Annexes are listed at the close of the parent document under the heading 'Annexes:', the wording used being the same as their subject headings.",
+      "chapter": "2",
+      "paragraphs": "218d, 5C",
+      "severity": "error",
+      "appliesTo": ["service-paper", "general"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "End of the document.",
+        "params": { "keyword": "Annexes:", "whenAnnexesPresent": true }
+      }
+    },
+    {
+      "id": "num.enclosure-listing",
+      "title": "Enclosures are listed numerically under 'Enclosure:'",
+      "description": "Enclosures are listed numerically at the end of the parent document under the heading 'Enclosure:' or 'Enclosures:'.",
+      "chapter": "2",
+      "paragraphs": "220",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "End of the document.",
+        "params": { "keyword": "Enclosure", "whenEnclosuresPresent": true }
+      }
+    },
+    {
+      "id": "num.flag-listing",
+      "title": "Flags are listed alphabetically at the end of the parent document",
+      "description": "Flags are listed alphabetically at the end of the parent or covering document under the heading 'Flag:' or 'Flags:' after any annexes but before the list of departments consulted.",
+      "chapter": "2",
+      "paragraphs": "221",
+      "severity": "warning",
+      "appliesTo": ["brief", "point-brief"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "End of the brief.",
+        "params": { "keyword": "Flags:", "whenFlagsPresent": true }
+      }
+    }
+  ]
+}

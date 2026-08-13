@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DFSWM Commands</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+  <script>
+    // Function-file entry point used by the manifest's FunctionFile reference.
+    Office.initialize = function () {
+      Office.actions.associate("showTaskpane", function () {
+        Office.addin.showAsTaskpane();
+      });
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+{
+  "id": "dfswm.abbreviations",
+  "title": "Abbreviations and Acronyms",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapters 2 and 16",
+  "chapter": "16",
+  "notes": "The authorized abbreviation lists are at Annexes A-C to Chapter 16. The plugin can ship these lists as reference data.",
+  "rules": [
+    {
+      "id": "abb.no-punctuation",
+      "title": "Full stops are not used within or after abbreviations",
+      "description": "Punctuation is not used within or after abbreviations, except when it is part of normal sentence punctuation.",
+      "chapter": "2",
+      "paragraphs": "265a, 269b",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Abbreviations with full stops.",
+        "params": { "pattern": "\\b[A-Z]{2,}\\.", "expect": "absent" }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Remove the full stops inside abbreviations."
+      },
+      "notes": "Care needed with sentence-final full stops; the plugin should only flag full stops directly after 2+ capital letters mid-sentence."
+    },
+    {
+      "id": "abb.initials-no-stops",
+      "title": "Full stops are not used between a person's initials",
+      "description": "Full stops are neither used between a person's initials nor between decorations.",
+      "chapter": "2",
+      "paragraphs": "265b",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Initials in names.",
+        "params": { "pattern": "\\b[A-Z]\\.[A-Z]\\.", "expect": "absent" }
+      }
+    },
+    {
+      "id": "abb.explain-first-use",
+      "title": "Unfamiliar abbreviations must be explained on first use",
+      "description": "Words abbreviated for convenience must be explained the first time they appear in the text, e.g. 'Joint Command and Staff College (JCSC)', and used consistently throughout.",
+      "chapter": "2",
+      "paragraphs": "268a(6)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Full text.",
+        "params": { "rule": "explained-on-first-use" }
+      }
+    },
+    {
+      "id": "abb.consistency",
+      "title": "Abbreviation use must be consistent throughout",
+      "description": "There must be consistency of use throughout the document in headings, tables, and text.",
+      "chapter": "2",
+      "paragraphs": "268a(6)",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "all",
+        "where": "Document-wide usage.",
+        "params": { "rule": "consistent-use" }
+      }
+    },
+    {
+      "id": "abb.no-abbrev-in-heading",
+      "title": "Abbreviations should not be introduced in a heading",
+      "description": "Abbreviations should not be introduced in a heading; where such words first appear in a heading, they should be written in full in that heading and the abbreviation introduced the first time the words appear in the text.",
+      "chapter": "2",
+      "paragraphs": "268a(6)",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "heading",
+        "where": "Heading text.",
+        "params": { "rule": "no-introduction-in-headings" }
+      }
+    },
+    {
+      "id": "abb.op-writing-maximum",
+      "title": "Operational writing makes maximum use of authorized abbreviations",
+      "description": "Maximum use is to be made of abbreviations in operational writing except for the mandatory paragraph headings in operational and administrative orders; reported speech is always written in full.",
+      "chapter": "2",
+      "paragraphs": "268b",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Operational writing.",
+        "params": { "rule": "maximum-use", "exceptions": ["mandatory-order-headings"] }
+      }
+    },
+    {
+      "id": "abb.authorized-only",
+      "title": "Only authorized abbreviations are used in operational writing",
+      "description": "In operational writing and signal messages only abbreviations listed in Chapter 16 are to be used, in addition to those specified in Paragraphs 267 and 268.",
+      "chapter": "2",
+      "paragraphs": "270",
+      "severity": "error",
+      "appliesTo": ["general", "signal"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Full text.",
+        "params": { "rule": "authorized-only", "source": "ch16-annexes" }
+      }
+    },
+    {
+      "id": "abb.no-plural-s",
+      "title": "Plurals of abbreviations follow the authorized rules",
+      "description": "Some abbreviations indicate both singular and plural and do not require an 's'; where 's' is added it goes at the end (e.g. C in Cs), and only for nouns, never verbs.",
+      "chapter": "2",
+      "paragraphs": "269c",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Plural abbreviation forms.",
+        "params": { "rule": "plural-forms" }
+      }
+    },
+    {
+      "id": "abb.ampersand",
+      "title": "Ampersand used in titles but not unit titles",
+      "description": "An ampersand (&) is to be used instead of 'and' where appropriate in titles (e.g. Ops & Trg), but it is not to be used in unit titles.",
+      "chapter": "2",
+      "paragraphs": "269d",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "manual": true,
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Titles and unit designations.",
+        "params": { "pattern": "&", "expect": "present" }
+      },
+      "notes": "Ampersand is used in titles (e.g. Ops & Trg) but never in unit titles; distinguishing the two requires human review."
+    },
+    {
+      "id": "abb.allied-forces",
+      "title": "Care needed with abbreviations read by allied forces or non-Service authorities",
+      "description": "Special care is needed to ensure that any abbreviation used in documents or messages to be read by members of allied forces or by non-Service authorities will be understood by them.",
+      "chapter": "2",
+      "paragraphs": "271",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Documents with allied/non-Service readership.",
+        "params": { "rule": "spell-out-for-others" }
+      },
+      "manual": true
+    },
+    {
+      "id": "abb.rank-abbreviations",
+      "title": "Ranks and appointments are abbreviated in non-operational writing",
+      "description": "Ranks and appointments, designated regiments and corps, designated formations and units are abbreviated in non-operational writing.",
+      "chapter": "2",
+      "paragraphs": "268a(1)",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Ranks and appointments.",
+        "params": { "rule": "use-authorized-rank-abbreviations" }
+      }
+    },
+    {
+      "id": "abb.formation-numbering",
+      "title": "Formation/unit titles: number before description in Arabic numerals",
+      "description": "Titles of formations and units are normally written in abbreviated form with identifying numbers in Arabic numerals BEFORE the description: 32 Bde, 36 Sqn, LAB. The description must never precede the number.",
+      "chapter": "2",
+      "paragraphs": "296",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Formation and unit designations.",
+        "params": { "pattern": "\\b(Bde|Sqn|Bn|Regt|Bty|Tp|Coy) ?\\d{2,3}\\b", "expect": "absent" }
+      }
+    },
+    {
+      "id": "abb.quantitative-in-full",
+      "title": "Quantitative numbers of formations/units are written in full",
+      "description": "Quantitative numbers of formations, units, ships and detachments are always written in full: 'Three brigades', not '3 bdes'.",
+      "chapter": "2",
+      "paragraphs": "297",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Quantitative expressions.",
+        "params": { "pattern": "\\b\\d+ (bde|sqn|bn|regt|bty|tps|det)s?\\b", "expect": "absent" }
+      }
+    },
+    {
+      "id": "abb.date-abbreviation",
+      "title": "Dates in non-operational writing use the abbreviated day-month-year form",
+      "description": "Dates are abbreviated using the first 3 letters of the day of the week, the day of the month, the first 3 letters of the month and the last 2 figures of the year, e.g. 'Fri 1 Apr 13'. When dating a document, the day is omitted.",
+      "chapter": "2",
+      "paragraphs": "268a(2)",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "date-format",
+        "scope": "body",
+        "where": "Date references.",
+        "params": { "pattern": "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{2}$", "expect": "present" }
+      }
+    }
+  ]
+}

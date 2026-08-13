@@ -1,0 +1,116 @@
+{
+  "title": "DFSWM 2024 Ruleset Package Index",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04)",
+  "version": "1.0.0",
+  "description": "Maps each supported document type to the rulesets the compliance plugin should run.",
+  "documentTypes": {
+    "directed-letter": {
+      "label": "Directed Letter",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "routine-letter": {
+      "label": "Routine Letter",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "formal-letter": {
+      "label": "Formal Letter",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "demi-official-letter": {
+      "label": "Demi-Official (DO) Letter",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "memorandum": {
+      "label": "Memorandum",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "loose-minute": {
+      "label": "Loose Minute",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "esm": {
+      "label": "Electronic Short Message",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "email": {
+      "label": "Email",
+      "chapter": "3",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "correspondence"]
+    },
+    "signal": {
+      "label": "Signal Message",
+      "chapter": "4",
+      "rulesets": ["core-formatting", "security", "dates-times", "abbreviations", "signal-message"]
+    },
+    "service-paper": {
+      "label": "Service Paper / Submission",
+      "chapter": "5",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "service-paper"]
+    },
+    "agenda": {
+      "label": "Agenda",
+      "chapter": "6",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "minutes-agenda"]
+    },
+    "minutes": {
+      "label": "Minutes",
+      "chapter": "6",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "minutes-agenda"]
+    },
+    "brief": {
+      "label": "Brief",
+      "chapter": "7",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations"]
+    },
+    "point-brief": {
+      "label": "Point Brief",
+      "chapter": "7",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations"]
+    },
+    "directive": {
+      "label": "Directive",
+      "chapter": "12",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "directives-orders"]
+    },
+    "warning-order": {
+      "label": "Warning Order",
+      "chapter": "12",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "directives-orders"]
+    },
+    "operation-order": {
+      "label": "Operation Order",
+      "chapter": "12",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "directives-orders"]
+    },
+    "admin-order": {
+      "label": "Administrative / Service Support Order",
+      "chapter": "12",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "directives-orders"]
+    },
+    "fragmentary-order": {
+      "label": "Fragmentary Order (FRAGO)",
+      "chapter": "12",
+      "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations", "directives-orders"]
+    }
+  },
+  "rulesetFiles": {
+    "core-formatting": "rulesets/core-formatting.json",
+    "headings": "rulesets/headings.json",
+    "numbering": "rulesets/numbering.json",
+    "security": "rulesets/security.json",
+    "dates-times": "rulesets/dates-times.json",
+    "abbreviations": "rulesets/abbreviations.json",
+    "correspondence": "rulesets/correspondence.json",
+    "signal-message": "rulesets/signal-message.json",
+    "service-paper": "rulesets/service-paper.json",
+    "minutes-agenda": "rulesets/minutes-agenda.json",
+    "directives-orders": "rulesets/directives-orders.json"
+  }
+}

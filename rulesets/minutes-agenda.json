@@ -1,0 +1,117 @@
+{
+  "id": "dfswm.minutes-agenda",
+  "title": "Agenda and Minutes of Meetings and Conferences",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 6",
+  "chapter": "6",
+  "notes": "Sample layouts of an agenda and minutes at Annexes A and B to Chapter 6.",
+  "rules": [
+    {
+      "id": "min.agenda-subject",
+      "title": "Agenda subject heading states purpose, location, room, time and date",
+      "description": "The agenda's subject heading states the general purpose of the meeting, together with the location, room, time and date.",
+      "chapter": "6",
+      "paragraphs": "614",
+      "severity": "error",
+      "appliesTo": ["agenda"],
+      "check": {
+        "type": "regex",
+        "scope": "subject-heading",
+        "where": "Subject heading of the agenda.",
+        "params": { "pattern": "(location|room|time|date|\\d{4} hours|\\d{1,2}:\\d{2})", "expect": "present" }
+      },
+      "notes": "Heuristic: checks the agenda heading covers the four required elements."
+    },
+    {
+      "id": "min.agenda-numbered-items",
+      "title": "Agenda items are numbered and each has a heading",
+      "description": "The items to be discussed must be in a logical order and each item of the agenda is given a number and a heading.",
+      "chapter": "6",
+      "paragraphs": "615a",
+      "severity": "error",
+      "appliesTo": ["agenda"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Agenda items.",
+        "params": { "rule": "numbered-items-with-headings" }
+      }
+    },
+    {
+      "id": "min.agenda-series-items",
+      "title": "Series meetings: first items and last item follow convention",
+      "description": "When the meeting is one of a series, the first item should be 'Minutes of Last Meeting' followed by 'Matters Arising from Last Meeting' and the last item should be 'Arrangements for Next Meeting'.",
+      "chapter": "6",
+      "paragraphs": "615b",
+      "severity": "warning",
+      "appliesTo": ["agenda"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "First and last agenda items.",
+        "params": { "rule": "series-items", "first": ["Minutes of Last Meeting", "Matters Arising from Last Meeting"], "last": "Arrangements for Next Meeting" }
+      }
+    },
+    {
+      "id": "min.agenda-aob",
+      "title": "Any Other Business is included after the last item",
+      "description": "The item 'Any Other Business' or 'AOB' is normally included after the last item discussion.",
+      "chapter": "6",
+      "paragraphs": "615c",
+      "severity": "warning",
+      "appliesTo": ["agenda"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "End of the agenda.",
+        "params": { "pattern": "Any Other Business|AOB", "expect": "present" }
+      }
+    },
+    {
+      "id": "min.minutes-purpose",
+      "title": "Minutes record decisions, action required and who takes the action",
+      "description": "Minutes of a meeting summarize relevant discussions, record decisions taken, state the action required, and specify who is to take the action.",
+      "chapter": "6",
+      "paragraphs": "618",
+      "severity": "error",
+      "appliesTo": ["minutes"],
+      "check": {
+        "type": "required-element",
+        "scope": "body",
+        "where": "Structure of the minutes.",
+        "params": { "elements": ["decisions", "action-column"] }
+      },
+      "notes": "Heuristic: minutes should include an action column or action list with named actionees."
+    },
+    {
+      "id": "min.minutes-impersonal",
+      "title": "Minutes must be impersonal",
+      "description": "Minutes are written in an impersonal form: 'A said ...', 'B replied ...' must be avoided; individuals are referred to by appointment, and the chairperson is always referred to as 'the chairman'.",
+      "chapter": "6",
+      "paragraphs": "618c",
+      "severity": "warning",
+      "appliesTo": ["minutes"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Body of the minutes.",
+        "params": { "pattern": "\\b(he|she) said|\\b[A-Z] (said|replied|pointed out|added)\\b", "expect": "absent" }
+      }
+    },
+    {
+      "id": "min.minutes-brevity",
+      "title": "Minutes must be accurate, brief and logically arranged",
+      "description": "Minutes must be accurate, brief, logically arranged, impersonal and in appropriate tenses; they are not a verbatim record.",
+      "chapter": "6",
+      "paragraphs": "618",
+      "severity": "info",
+      "appliesTo": ["minutes"],
+      "check": {
+        "type": "required-element",
+        "scope": "body",
+        "where": "Style of the minutes.",
+        "params": { "rule": "style-check" }
+      },
+      "manual": true
+    }
+  ]
+}

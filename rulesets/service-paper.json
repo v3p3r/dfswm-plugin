@@ -1,0 +1,165 @@
+{
+  "id": "dfswm.service-paper",
+  "title": "Submissions and Service Papers",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 5",
+  "chapter": "5",
+  "notes": "The service paper is the staff officer's principal decision-making document. Sample layouts at Annexes A-C to Chapter 5.",
+  "rules": [
+    {
+      "id": "sp.mandatory-headings",
+      "title": "Service papers must contain the mandatory headings",
+      "description": "INTRODUCTION, AIM, CONCLUSION and RECOMMENDATIONS are mandatory headings for all Service papers.",
+      "chapter": "5",
+      "paragraphs": "5C notes 2",
+      "severity": "error",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "Main headings across the paper.",
+        "params": {
+          "rule": "mandatory-sequence",
+          "mandatory": ["INTRODUCTION", "AIM", "CONCLUSION", "RECOMMENDATIONS"],
+          "order": true
+        }
+      }
+    },
+    {
+      "id": "sp.aim-first",
+      "title": "The AIM follows the INTRODUCTION",
+      "description": "The structure runs: references, INTRODUCTION, AIM, discussion under main headings, SUMMARY if needed, CONCLUSION and RECOMMENDATIONS.",
+      "chapter": "5",
+      "paragraphs": "513, 5B",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "Heading sequence.",
+        "params": { "rule": "aim-after-introduction" }
+      }
+    },
+    {
+      "id": "sp.aim-statement",
+      "title": "The AIM must begin 'The aim of this service paper is to ...'",
+      "description": "The aim of a service paper is stated in the form 'The aim of this service paper is to ...'.",
+      "chapter": "5",
+      "paragraphs": "5B",
+      "severity": "error",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "The paragraph under the AIM heading.",
+        "params": { "pattern": "^The aim of this (service paper|paper) is to", "expect": "present" }
+      }
+    },
+    {
+      "id": "sp.subject-heading",
+      "title": "Service paper subject heading is centred and bold",
+      "description": "The subject heading gives the main subject of the service paper, centred and bold, following the rules and conventions of service writing.",
+      "chapter": "5",
+      "paragraphs": "5B notes 2",
+      "severity": "error",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "heading-style",
+        "scope": "subject-heading",
+        "where": "Subject heading.",
+        "params": { "alignment": "center", "bold": true }
+      }
+    },
+    {
+      "id": "sp.references",
+      "title": "Service papers cite references A, B, C ...",
+      "description": "Service papers list references at the start under the heading 'Reference:' or 'References:', lettered A, B, C in the order cited.",
+      "chapter": "5",
+      "paragraphs": "5B, 282-288",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "required-element",
+        "scope": "body",
+        "where": "Start of the paper, beneath the subject heading.",
+        "params": { "keyword": "Reference" }
+      }
+    },
+    {
+      "id": "sp.signed-by-author",
+      "title": "A Service paper is normally signed by the author",
+      "description": "A Service Paper is normally signed by the author, with the signature block showing name, rank and appointment.",
+      "chapter": "5",
+      "paragraphs": "5C note 4, 227",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "signature-block",
+        "scope": "signature-block",
+        "where": "Signature block at the end of the paper.",
+        "params": { "elements": ["name", "rank", "appointment"] }
+      }
+    },
+    {
+      "id": "sp.distribution",
+      "title": "Service papers end with a distribution list",
+      "description": "The distribution should be listed at the end of the paper.",
+      "chapter": "5",
+      "paragraphs": "5C note 6",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "End of the paper.",
+        "params": { "keyword": "Distribution" }
+      }
+    },
+    {
+      "id": "sp.annexes-for-detail",
+      "title": "Extensive detail belongs in annexes, not the body",
+      "description": "To maintain the flow of argument, put extensive detail such as statistical data in annexes; only the deductions derived from the annexes need to be inserted in the body.",
+      "chapter": "5",
+      "paragraphs": "5C note 5",
+      "severity": "info",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "Presence and use of annexes.",
+        "params": { "rule": "large-detail-in-annexes" }
+      },
+      "manual": true
+    },
+    {
+      "id": "sp.referencing-apa",
+      "title": "JCSC write-ups requiring referencing use the APA style",
+      "description": "The APA style is adopted by the JCSC for all write-ups requiring referencing of cited sources.",
+      "chapter": "5",
+      "paragraphs": "5D para 2",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "Citations and reference list.",
+        "params": { "rule": "apa-style" }
+      },
+      "notes": "Chicago footnotes are used at the JCSC for certain papers; the plugin should confirm the required style with the user."
+    },
+    {
+      "id": "sp.references-in-text",
+      "title": "Annexes must be referred to in the text of the parent paper",
+      "description": "Annexes are referred to in the text of the parent document.",
+      "chapter": "2",
+      "paragraphs": "218a",
+      "severity": "warning",
+      "appliesTo": ["service-paper"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Body text mentioning annexes.",
+        "params": { "pattern": "\\b(Annex|Appendix|Enclosure) [A-Z0-9]", "expect": "present" }
+      }
+    }
+  ]
+}

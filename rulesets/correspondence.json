@@ -1,0 +1,239 @@
+{
+  "id": "dfswm.correspondence",
+  "title": "Service Correspondence (Letters, Memoranda, Emails)",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 3",
+  "chapter": "3",
+  "notes": "Rules for the twelve types of Service correspondence. Formats are illustrated in Annexes A-F to Chapter 3.",
+  "rules": [
+    {
+      "id": "corr.required-elements",
+      "title": "All correspondence must have a file reference, date and signature block",
+      "description": "All correspondences must have a file reference, date and signature block.",
+      "chapter": "3",
+      "paragraphs": "301",
+      "severity": "error",
+      "appliesTo": ["directed-letter", "routine-letter", "formal-letter", "demi-official-letter", "memorandum", "loose-minute", "esm", "email"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "The letterhead area and end of the correspondence.",
+        "params": {
+          "keywords": [
+            { "id": "file-reference", "pattern": "\\b[A-Z]{2,3}\\/\\d+\\/|\\bReference\\b" },
+            { "id": "date", "pattern": "\\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{2,4}" },
+            { "id": "signature-block", "pattern": "\\b(Lt Col|Maj|Capt|Lt|WO|Sgt|Cpl|Brig|Col|Gen|SO1|SO2|SO3)\\b" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "corr.structure",
+      "title": "Text should consist of an introduction, a body and a conclusion",
+      "description": "In all but the shortest letters on routine matters, the text should cover a single subject and consist of an introduction, a body and a conclusion.",
+      "chapter": "3",
+      "paragraphs": "302",
+      "severity": "warning",
+      "appliesTo": ["directed-letter", "routine-letter", "formal-letter"],
+      "check": {
+        "type": "element-order",
+        "scope": "body",
+        "where": "Letter text.",
+        "params": { "rule": "intro-body-conclusion" }
+      },
+      "notes": "These headings are seldom used in letter writing, so this is a structural heuristic."
+    },
+    {
+      "id": "corr.civilian-letter-style",
+      "title": "Letters to the public omit subject heading and paragraph numbers",
+      "description": "To help create a more personal tone when writing a letter to a person outside the MoD/KDF, leave out the subject heading and paragraph numbers.",
+      "chapter": "3",
+      "paragraphs": "301, 311a",
+      "severity": "warning",
+      "appliesTo": ["routine-letter"],
+      "check": {
+        "type": "paragraph-numbering",
+        "scope": "body",
+        "where": "Routine letters to civilians.",
+        "params": { "rule": "prefer-un-numbered" }
+      }
+    },
+    {
+      "id": "corr.civilian-no-abbreviations",
+      "title": "Abbreviations must not be used in letters to civilians",
+      "description": "In correspondence with civilian authorities or members of the public, abbreviations should not be used.",
+      "chapter": "3",
+      "paragraphs": "311a",
+      "severity": "error",
+      "appliesTo": ["routine-letter"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Full text of the letter.",
+        "params": { "allowed": "none" }
+      }
+    },
+    {
+      "id": "corr.third-person",
+      "title": "Most Defence Forces correspondence is written in the third person",
+      "description": "Most correspondence is written in the third person, except formal letters, demi-official letters, letters from a commander conveying personal views, and letters from headquarters which may use the first person plural.",
+      "chapter": "3",
+      "paragraphs": "303",
+      "severity": "warning",
+      "appliesTo": ["directed-letter", "routine-letter"],
+      "check": {
+        "type": "not-first-person",
+        "scope": "body",
+        "where": "Body of the letter.",
+        "params": { "firstPersonAllowed": false }
+      },
+      "notes": "Heuristic: flag frequent first-person singular usage ('I', 'my') in non-formal/DO letters."
+    },
+    {
+      "id": "corr.formal-salutation",
+      "title": "Formal letters begin with the salutation 'Sir'",
+      "description": "A formal letter begins with the salutation 'Sir' and the text begins 'I have the honour to ...', except the Navy circumstantial letter which begins 'I regret to report ...'.",
+      "chapter": "3",
+      "paragraphs": "312",
+      "severity": "error",
+      "appliesTo": ["formal-letter"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Opening of the letter.",
+        "params": { "pattern": "^Sir\\b", "expect": "present" }
+      }
+    },
+    {
+      "id": "corr.formal-ending",
+      "title": "Formal letters end 'I have the honour to be, Sir, Your obedient Servant'",
+      "description": "A formal letter always ends 'I have the honour to be, Sir, Your obedient Servant'.",
+      "chapter": "3",
+      "paragraphs": "312",
+      "severity": "error",
+      "appliesTo": ["formal-letter"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Closing of the letter.",
+        "params": { "pattern": "I have the honour to be, Sir, Your obedient Servant", "expect": "present" }
+      }
+    },
+    {
+      "id": "corr.formal-signed-by-originator",
+      "title": "Formal letters are signed by the originator",
+      "description": "A formal letter is addressed only to a senior or equal and is signed by the originator.",
+      "chapter": "3",
+      "paragraphs": "312",
+      "severity": "warning",
+      "appliesTo": ["formal-letter"],
+      "check": {
+        "type": "signature-block",
+        "scope": "signature-block",
+        "where": "Signature block.",
+        "params": { "rule": "signed-by-originator" }
+      },
+      "manual": true
+    },
+    {
+      "id": "corr.do-one-subject",
+      "title": "DO letters are restricted to one subject",
+      "description": "Demi-Official (DO) letters permit an informal approach but must be restricted to one subject and filed in the normal way.",
+      "chapter": "3",
+      "paragraphs": "313",
+      "severity": "warning",
+      "appliesTo": ["demi-official-letter"],
+      "manual": true,
+      "notes": "Human review: a DO letter must be restricted to one subject."
+    },
+    {
+      "id": "corr.do-salutation",
+      "title": "DO letters use 'Dear ...' salutation and 'Yours' ending in manuscript",
+      "description": "The salutation 'Dear ........' and the ending 'Yours.' are inserted in manuscript by the originator.",
+      "chapter": "3",
+      "paragraphs": "313",
+      "severity": "error",
+      "appliesTo": ["demi-official-letter"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Opening and closing of the DO letter.",
+        "params": { "pattern": "^Dear|Yours", "expect": "present" }
+      }
+    },
+    {
+      "id": "corr.do-first-person",
+      "title": "DO letters are written in the first person",
+      "description": "A DO letter is written in the first person using an informal conversational style.",
+      "chapter": "3",
+      "paragraphs": "313b",
+      "severity": "warning",
+      "appliesTo": ["demi-official-letter"],
+      "check": {
+        "type": "not-first-person",
+        "scope": "body",
+        "where": "Body of the DO letter.",
+        "params": { "firstPersonAllowed": true }
+      }
+    },
+    {
+      "id": "corr.do-no-abbreviations",
+      "title": "Abbreviations are normally not used in DO letters",
+      "description": "Apart from decorations, military symbol identifying references, post office numbers and telephone numbers, abbreviations are normally not used in DO letters.",
+      "chapter": "3",
+      "paragraphs": "313c",
+      "severity": "warning",
+      "appliesTo": ["demi-official-letter"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Body of the DO letter.",
+        "params": { "allowed": ["decorations", "military-symbol-references", "post-office-numbers", "telephone-numbers"] }
+      }
+    },
+    {
+      "id": "corr.abbreviation-consistency",
+      "title": "Once used, a common abbreviation must be used consistently",
+      "description": "Once a common abbreviation has been used in the body of the letter it must be used consistently throughout.",
+      "chapter": "3",
+      "paragraphs": "313c",
+      "severity": "warning",
+      "appliesTo": ["demi-official-letter"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Body of the DO letter.",
+        "params": { "rule": "consistent-use" }
+      }
+    },
+    {
+      "id": "corr.memorandum-abbreviations",
+      "title": "Memoranda may use abbreviations throughout",
+      "description": "A printed memorandum form is designed to save time, is normally written in manuscript, and abbreviations may be used throughout.",
+      "chapter": "3",
+      "paragraphs": "314",
+      "severity": "info",
+      "appliesTo": ["memorandum"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "body",
+        "where": "Memorandum text.",
+        "params": { "allowed": "all" }
+      }
+    },
+    {
+      "id": "corr.email-format",
+      "title": "Email correspondence must still carry reference, date and signature block",
+      "description": "Email is one of the two types of correspondence and all correspondences must have a file reference, date and signature block.",
+      "chapter": "3",
+      "paragraphs": "301",
+      "severity": "error",
+      "appliesTo": ["email"],
+      "check": {
+        "type": "required-element",
+        "scope": "all",
+        "where": "Email content.",
+        "params": { "elements": ["file-reference", "date", "signature-block"] }
+      }
+    }
+  ]
+}

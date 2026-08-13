@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFSWM Compliance</title>
+  <link rel="stylesheet" href="taskpane.css" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">KDF</span>
+      <div>
+        <h1>DFSWM Compliance</h1>
+        <p class="sub">Defence Forces Service Writing Manual 2024 (JP-04)</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-body">
+    <!-- Step 1: configure -->
+    <section id="config-pane" class="pane">
+      <label class="field-label" for="doc-type">Document type</label>
+      <select id="doc-type" class="select"></select>
+      <p class="hint">Select the type of document being checked so the correct rules apply.</p>
+
+      <label class="field-label" for="ruleset-select">Rulesets to run</label>
+      <div id="ruleset-select" class="chips"></div>
+
+      <button id="run-check" class="btn btn-primary">Run compliance check</button>
+      <button id="load-rulesets" class="btn btn-ghost" hidden>Reload rulesets</button>
+    </section>
+
+    <!-- Step 2: results -->
+    <section id="results-pane" class="pane" hidden>
+      <div id="summary" class="summary"></div>
+      <div id="results" class="results"></div>
+      <button id="back" class="btn btn-ghost">← Back</button>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span id="status" class="status">Ready</span>
+    <span class="version">v0.1.0-dev</span>
+  </footer>
+
+  <script src="../dist/bundle.js"></script>
+  <script src="taskpane.js"></script>
+</body>
+</html>

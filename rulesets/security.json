@@ -1,0 +1,176 @@
+{
+  "id": "dfswm.security",
+  "title": "Security Classification, Privacy Markings & Copy Numbering",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 2",
+  "chapter": "2",
+  "notes": "Security rules are amplified by single-Service security publications; these are the basic checks.",
+  "rules": [
+    {
+      "id": "sec.classification-valid",
+      "title": "Security classification must be one of the four recognised grades",
+      "description": "The four security classifications are TOP SECRET, SECRET, CONFIDENTIAL and RESTRICTED.",
+      "chapter": "2",
+      "paragraphs": "236",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "security-marking",
+        "scope": "all",
+        "where": "Protective markings on the document.",
+        "params": { "allowed": ["TOP SECRET", "SECRET", "CONFIDENTIAL", "RESTRICTED"] }
+      }
+    },
+    {
+      "id": "sec.classification-page-presence",
+      "title": "Security classification shown at top and bottom of pages",
+      "description": "The security classification is shown at the top and bottom of the front and back covers and on every page (for loose-leaf) or at centre top and bottom of covers, title page, first and last pages (for securely bound documents).",
+      "chapter": "2",
+      "paragraphs": "249-250",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "security-marking",
+        "scope": "all",
+        "where": "Header and footer of each page.",
+        "params": { "mustMatchDocumentClassification": true, "targets": ["header", "footer"] }
+      }
+    },
+    {
+      "id": "sec.document-grading",
+      "title": "Document must be graded at least as high as its most classified component",
+      "description": "The grading of a main paper must be at least as high as that of its most classified component, and a file or group of related documents must be graded as the highest graded document within it.",
+      "chapter": "2",
+      "paragraphs": "251-252",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "security-marking",
+        "scope": "all",
+        "where": "Comparison of document grade with annex/appendix grades.",
+        "params": { "rule": "parent-at-least-highest-component" }
+      }
+    },
+    {
+      "id": "sec.privacy-marking",
+      "title": "Privacy marking 'IN CONFIDENCE' shown at top and bottom of every page",
+      "description": "Documents requiring privacy protection are endorsed 'IN CONFIDENCE' (optionally prefixed, e.g. 'STAFF IN CONFIDENCE'), shown at the top and bottom of every page and stamped in red ink.",
+      "chapter": "2",
+      "paragraphs": "253",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "security-marking",
+        "scope": "all",
+        "where": "Header and footer of each page.",
+        "params": { "privacyMarking": "IN CONFIDENCE", "topAndBottom": true, "targets": ["header", "footer"] }
+      }
+    },
+    {
+      "id": "sec.copy-number",
+      "title": "TOP SECRET and SECRET documents bear copy numbers",
+      "description": "All TOP SECRET and SECRET documents bear individual copy numbers, e.g. 'Copy No 1 of 20 copies', in the top right hand corner of the first page and on each classified annex, appendix or trace.",
+      "chapter": "2",
+      "paragraphs": "255",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "copy-number",
+        "scope": "first-page",
+        "where": "Top right of the first page.",
+        "params": { "requiredIf": "TOP SECRET|SECRET" }
+      }
+    },
+    {
+      "id": "sec.copy-number-orders",
+      "title": "Operation and administrative/logistics orders are copy numbered",
+      "description": "All operation and administrative/logistics orders, whatever their security classification, are given a copy number.",
+      "chapter": "2",
+      "paragraphs": "255",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "copy-number",
+        "scope": "first-page",
+        "where": "Top right of the first page of orders.",
+        "params": { "requiredIf": "order" }
+      },
+      "notes": "Applies to operation orders, admin/log orders (Chapter 12/14 documents)."
+    },
+    {
+      "id": "sec.copy-number-format",
+      "title": "Copy number format must be 'Copy No X of Y copies'",
+      "description": "When one copy exists it is shown as 'Copy No 1 of 1 copy'. Reproduction copies are marked 'REPRODUCTION Copy No... Of... Copies'.",
+      "chapter": "2",
+      "paragraphs": "255",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "copy-number",
+        "scope": "first-page",
+        "where": "Copy number text.",
+        "params": { "pattern": "^Copy No \\d+ of \\d+ copies?$" }
+      }
+    },
+    {
+      "id": "sec.total-pages",
+      "title": "TOP SECRET/SECRET pages show total page count",
+      "description": "In TOP SECRET and SECRET documents and classified documents bearing supplementary international markings, all pages are numbered to indicate the total number of pages, e.g. '1 of 20'.",
+      "chapter": "2",
+      "paragraphs": "257",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "page-number-format",
+        "scope": "footer",
+        "where": "Page number in footer.",
+        "params": { "format": "X of Y", "requiredIf": "TOP SECRET|SECRET" }
+      }
+    },
+    {
+      "id": "sec.annex-page-numbering",
+      "title": "Annex pages are numbered with the annex letter",
+      "description": "Pages of an annex, including a single-page annex, are given the letter of the annex followed by the page number, e.g. 'A-1', 'A-2'. Annexes following chapters use '1A-1', '1A-2'. Appendix pages use e.g. '5B4-2'.",
+      "chapter": "2",
+      "paragraphs": "256",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "page-number-format",
+        "scope": "footer",
+        "where": "Page numbers of annexes and appendices.",
+        "params": { "format": "annex-letter-page" }
+      }
+    },
+    {
+      "id": "sec.precedence",
+      "title": "Precedence marking shown in capitals at top right of the first page only",
+      "description": "The precedence marking (IMMEDIATE or PRIORITY) is shown in capital letters at the top right of the first page only.",
+      "chapter": "2",
+      "paragraphs": "293-294",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "precedence-marking",
+        "scope": "first-page",
+        "where": "Top right of the first page.",
+        "params": { "allowed": ["IMMEDIATE", "PRIORITY"], "caps": true, "firstPageOnly": true }
+      }
+    },
+    {
+      "id": "sec.precedence-authority",
+      "title": "IMMEDIATE precedence requires senior authority",
+      "description": "Authorization of IMMEDIATE precedence is normally confined to senior staff officers and commanders of independent units; any commissioned officer can originate PRIORITY papers.",
+      "chapter": "2",
+      "paragraphs": "293",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "precedence-marking",
+        "scope": "first-page",
+        "where": "Precedence marking.",
+        "params": { "rule": "immediate-needs-authority" }
+      },
+      "manual": true
+    }
+  ]
+}

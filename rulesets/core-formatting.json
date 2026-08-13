@@ -1,0 +1,405 @@
+{
+  "id": "dfswm.core-formatting",
+  "title": "Core Formatting & Layout Conventions",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 2",
+  "chapter": "2",
+  "notes": "Universal conventions that apply to all Service writing regardless of document type.",
+  "rules": [
+    {
+      "id": "core.font",
+      "title": "Font type must be Times New Roman or Arial",
+      "description": "All Service writing must use a proportionally spaced font: Times New Roman or Arial.",
+      "chapter": "2",
+      "paragraphs": "204",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "font-name",
+        "scope": "all",
+        "where": "Every run of text in the document body.",
+        "params": {
+          "allowed": ["Times New Roman", "Arial"]
+        }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Set the document default font to Times New Roman and reapply to all body text."
+      }
+    },
+    {
+      "id": "core.body-size",
+      "title": "Body text must be 12 point",
+      "description": "The preferred size for general text is 12 point.",
+      "chapter": "2",
+      "paragraphs": "205",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "font-size",
+        "scope": "body",
+        "where": "All body paragraphs.",
+        "params": { "size": 12, "comparison": "eq" }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Set selected body text to 12 pt."
+      }
+    },
+    {
+      "id": "core.table-size",
+      "title": "Table text must be 10 point",
+      "description": "Text within tables uses 10 point.",
+      "chapter": "2",
+      "paragraphs": "205",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "font-size",
+        "scope": "table",
+        "where": "All text inside table cells.",
+        "params": { "size": 10, "comparison": "eq" }
+      }
+    },
+    {
+      "id": "core.footnote-size",
+      "title": "Footnote text must be 8 point",
+      "description": "Footnotes are set in 8 point.",
+      "chapter": "2",
+      "paragraphs": "205",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "font-size",
+        "scope": "footnote",
+        "where": "All footnote text.",
+        "params": { "size": 8, "comparison": "eq" }
+      }
+    },
+    {
+      "id": "core.justification",
+      "title": "Text must be fully justified",
+      "description": "Body text is fully justified (both left and right margins aligned).",
+      "chapter": "2",
+      "paragraphs": "206",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "justification",
+        "scope": "body",
+        "where": "All body paragraphs.",
+        "params": { "alignment": "justified" }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Apply full justification to the document body."
+      }
+    },
+    {
+      "id": "core.bold-headings",
+      "title": "Headings must be bold",
+      "description": "Bold type is used in all headings of the document and for column headings in tables.",
+      "chapter": "2",
+      "paragraphs": "207",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "bold",
+        "scope": "heading",
+        "where": "Subject, main, group and paragraph headings.",
+        "params": { "expected": true }
+      }
+    },
+    {
+      "id": "core.bold-table-heads",
+      "title": "Table column headings must be bold",
+      "description": "Column headings in tables are bold.",
+      "chapter": "2",
+      "paragraphs": "207",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "bold",
+        "scope": "table-column-head",
+        "where": "The header row of each table.",
+        "params": { "expected": true }
+      }
+    },
+    {
+      "id": "core.bold-markings",
+      "title": "Protective markings and flags must be bold",
+      "description": "Protective marking and references to flags/side flags within the text must be bold.",
+      "chapter": "2",
+      "paragraphs": "207",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "all",
+        "where": "Text mentioning security classifications, privacy markings, and flag references.",
+        "params": {
+          "pattern": "\\b(TOP SECRET|SECRET|CONFIDENTIAL|RESTRICTED|IN CONFIDENCE)\\b|\\b(Flag|Flags):",
+          "expect": "present",
+          "mustBeBold": true
+        }
+      }
+    },
+    {
+      "id": "core.italic-quotations",
+      "title": "Quotations must be italicised",
+      "description": "Italics are used for quotations, foreign words and the names of publications.",
+      "chapter": "2",
+      "paragraphs": "207",
+      "severity": "warning",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "italic",
+        "scope": "body",
+        "where": "Direct quotations and publication titles.",
+        "params": { "expected": true }
+      },
+      "notes": "Ambiguity risk: detection of quotations is heuristic. Plugin should flag quoted spans for confirmation."
+    },
+    {
+      "id": "core.margins-2cm",
+      "title": "Left and right margins must be 2 cm",
+      "description": "Left and right margins of 2 cm are used for all documents.",
+      "chapter": "2",
+      "paragraphs": "215a(1)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "margin",
+        "scope": "all",
+        "where": "Page layout margins.",
+        "params": { "sides": ["left", "right"], "valueCm": 2.0, "excludes": ["brief", "point-brief"] }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Set left and right margins to 2 cm."
+      }
+    },
+    {
+      "id": "core.margin-brief-4cm",
+      "title": "Briefs require a 4 cm right margin",
+      "description": "Briefs and point briefs use a 4.0 cm right margin to leave room for manuscript notes.",
+      "chapter": "2",
+      "paragraphs": "215a(1)",
+      "severity": "error",
+      "appliesTo": ["brief", "point-brief"],
+      "check": {
+        "type": "margin",
+        "scope": "all",
+        "where": "Page layout right margin.",
+        "params": { "sides": ["right"], "valueCm": 4.0 }
+      }
+    },
+    {
+      "id": "core.margins-top-bottom",
+      "title": "Top and bottom margins must be 2 cm",
+      "description": "Top and bottom margins of 2.0 cm are normally used for all documents.",
+      "chapter": "2",
+      "paragraphs": "215b(1)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "margin",
+        "scope": "all",
+        "where": "Page layout top/bottom margins.",
+        "params": { "sides": ["top", "bottom"], "valueCm": 2.0 }
+      }
+    },
+    {
+      "id": "core.header-footer-margin",
+      "title": "Header and footer margins must be 1.5 cm",
+      "description": "Header and footer margins (protective markings, page numbers etc.) are set at 1.5 cm.",
+      "chapter": "2",
+      "paragraphs": "215b(1)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "margin",
+        "scope": "all",
+        "where": "Header and footer distance from page edge.",
+        "params": { "valueCm": 1.5, "target": "header-footer" }
+      }
+    },
+    {
+      "id": "core.paragraph-indent",
+      "title": "Paragraph numbers start at the margin, text indented 1 cm",
+      "description": "Where paragraphs are numbered, the numbers start at the left margin and the first word of the text starts 1.0 cm from the margin. Block indentation of 1.0 cm applies to further subdivisions.",
+      "chapter": "2",
+      "paragraphs": "215a(2)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "indent",
+        "scope": "body",
+        "where": "Numbered paragraphs and their subdivisions.",
+        "params": { "firstLineCm": 1.0, "blockIndentCm": 1.0 }
+      }
+    },
+    {
+      "id": "core.tabs-1cm",
+      "title": "Tabs should be set every 1.0 cm",
+      "description": "Tabs are set every 1.0 cm (or ½ in) for consistent horizontal spacing.",
+      "chapter": "2",
+      "paragraphs": "215a",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "tab-stop",
+        "scope": "all",
+        "where": "Default tab stops of the document.",
+        "params": { "intervalCm": 1.0 }
+      }
+    },
+    {
+      "id": "core.single-space-blocks",
+      "title": "Text blocks are single-spaced",
+      "description": "Blocks of text (paragraphs, headings of two or more lines, lists of references or annexes) are typed single-spaced, with one blank line between blocks.",
+      "chapter": "2",
+      "paragraphs": "215b(2)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "line-spacing",
+        "scope": "body",
+        "where": "Body paragraphs and headings.",
+        "params": { "spacing": "single" }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Set paragraph line spacing to single."
+      }
+    },
+    {
+      "id": "core.blank-line-before-pagenum",
+      "title": "At least one blank line between text and page number",
+      "description": "There should be a minimum of one blank line between the last line of writing and the page number.",
+      "chapter": "2",
+      "paragraphs": "215b(2)",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "blank-line",
+        "scope": "footer",
+        "where": "Vertical spacing above the page number in the footer.",
+        "params": { "minimum": 1 }
+      }
+    },
+    {
+      "id": "core.one-space-punctuation",
+      "title": "One space after punctuation",
+      "description": "One space is left after a comma, colon, semicolon, full stop, question mark and exclamation mark.",
+      "chapter": "2",
+      "paragraphs": "215a(4)",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "regex",
+        "scope": "body",
+        "where": "Punctuation followed by whitespace.",
+        "params": {
+          "pattern": "[,;:.!?] {2,}",
+          "expect": "absent"
+        }
+      },
+      "autofix": {
+        "available": true,
+        "description": "Collapse multiple spaces after punctuation to a single space."
+      }
+    },
+    {
+      "id": "core.no-underline",
+      "title": "Underlining must not be used for emphasis",
+      "description": "Underlining is used only in manuscripts in lieu of bolding, and must not be used to achieve emphasis in typed text.",
+      "chapter": "2",
+      "paragraphs": "267",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "underline",
+        "scope": "body",
+        "where": "Any underlined text.",
+        "params": { "expected": false }
+      }
+    },
+    {
+      "id": "core.draft-marking",
+      "title": "Drafts must carry the word DRAFT",
+      "description": "Manuscript drafts must be double spaced and the word 'DRAFT' written at the top of the first page below the security grading or privacy marking.",
+      "chapter": "2",
+      "paragraphs": "233",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "draft-marking",
+        "scope": "first-page",
+        "where": "Top of the first page, below any security grading.",
+        "params": { "keyword": "DRAFT" }
+      }
+    },
+    {
+      "id": "core.draft-double-spacing",
+      "title": "Drafts are double-spaced in the text",
+      "description": "Drafts for a minister, senior officer or official are produced with the text in double spacing or 1½ spacing.",
+      "chapter": "2",
+      "paragraphs": "215b(4)",
+      "severity": "info",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "line-spacing",
+        "scope": "body",
+        "where": "Body text of a draft.",
+        "params": { "spacing": ["double", "oneAndHalf"] }
+      },
+      "notes": "Only applicable to hard-copy drafts; electronic drafts may use normal spacing."
+    },
+    {
+      "id": "core.page-number-position",
+      "title": "Page numbers at bottom centre above the classification",
+      "description": "All pages other than single-page documents are numbered at the bottom centre, immediately above the security classification and privacy markings.",
+      "chapter": "2",
+      "paragraphs": "256",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "page-number-position",
+        "scope": "footer",
+        "where": "Footer area of every page.",
+        "params": { "position": "center" }
+      }
+    },
+    {
+      "id": "core.signature-not-alone",
+      "title": "Signature block must not appear alone at the top of a page",
+      "description": "A signature block must never appear by itself at the top of a page; at least one line of text must be above it.",
+      "chapter": "2",
+      "paragraphs": "231",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "keep-with-next",
+        "scope": "signature-block",
+        "where": "Signature block paragraphs.",
+        "params": { "keepWithPrevious": true }
+      },
+      "notes": "Word: set 'keep with previous' on the signature block, or check page-break position programmatically."
+    },
+    {
+      "id": "core.hanging-heading",
+      "title": "No hanging headings",
+      "description": "A heading must not be left alone at the bottom of a page with its text on the next page.",
+      "chapter": "2",
+      "paragraphs": "214",
+      "severity": "error",
+      "appliesTo": ["general"],
+      "check": {
+        "type": "keep-with-next",
+        "scope": "heading",
+        "where": "All headings.",
+        "params": { "keepWithNext": true }
+      }
+    }
+  ]
+}
