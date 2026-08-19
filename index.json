@@ -74,6 +74,11 @@
       "chapter": "7",
       "rulesets": ["core-formatting", "headings", "numbering", "security", "dates-times", "abbreviations"]
     },
+    "presentation": {
+      "label": "Presentation / Briefing Slides",
+      "chapter": "7",
+      "rulesets": ["presentation"]
+    },
     "directive": {
       "label": "Directive",
       "chapter": "12",
@@ -111,6 +116,7 @@
     "signal-message": "rulesets/signal-message.json",
     "service-paper": "rulesets/service-paper.json",
     "minutes-agenda": "rulesets/minutes-agenda.json",
-    "directives-orders": "rulesets/directives-orders.json"
+    "directives-orders": "rulesets/directives-orders.json",
+    "presentation": "rulesets/presentation.json"
   }
 }

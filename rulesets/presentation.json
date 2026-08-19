@@ -1,0 +1,148 @@
+{
+  "id": "presentation",
+  "title": "Presentation / Briefing Slides (Ch 7)",
+  "source": "Defence Forces Service Writing Manual 2024 (JP-04), Chapter 7",
+  "chapter": "7",
+  "appliesTo": ["presentation"],
+  "notes": "Rules for PowerPoint briefing and presentation decks. Slide text is checked against the same core conventions (fonts, underlining, dates, abbreviations, security markings) while Word-only layout rules (margins, page numbers, footnotes) are deliberately excluded — a slide deck is not a page-formatted document.",
+  "rules": [
+    {
+      "id": "pres.title-slide",
+      "title": "Opening title slide",
+      "description": "The deck should open with a title slide carrying the subject, date and security grading so the audience knows what and when the briefing covers.",
+      "chapter": "7",
+      "paragraphs": "707-714",
+      "severity": "warning",
+      "manual": true,
+      "notes": "Human review: confirm slide 1 is a title slide showing the subject, date and security grading before the briefing content begins.",
+      "appliesTo": ["presentation"]
+    },
+    {
+      "id": "pres.font-family",
+      "title": "Approved font family",
+      "description": "Slide text must use an approved service font (Times New Roman or Arial); decorative fonts weaken the professional standard.",
+      "chapter": "2",
+      "paragraphs": "204",
+      "severity": "warning",
+      "appliesTo": ["presentation"],
+      "check": {
+        "type": "font-name",
+        "scope": "all",
+        "where": "All text in shapes on every slide",
+        "params": { "allowed": ["Times New Roman", "Arial"] }
+      },
+      "autofix": { "available": true, "description": "Sets the deck text to the first approved font." }
+    },
+    {
+      "id": "pres.no-underline",
+      "title": "No underlining for emphasis",
+      "description": "Underlining must not be used for emphasis in typed text, including slide text; emphasis is shown by bold or capital letters.",
+      "chapter": "2",
+      "paragraphs": "204",
+      "severity": "error",
+      "appliesTo": ["presentation"],
+      "check": {
+        "type": "underline",
+        "scope": "all",
+        "where": "All slide text",
+        "params": {}
+      },
+      "autofix": { "available": true, "description": "Removes underlining from all slide text." }
+    },
+    {
+      "id": "pres.security-marking",
+      "title": "Security grading on every slide",
+      "description": "Each slide must carry the security classification (e.g. RESTRICTED) so the grading travels with the material.",
+      "chapter": "2",
+      "paragraphs": "216",
+      "severity": "error",
+      "appliesTo": ["presentation"],
+      "check": {
+        "type": "security-marking",
+        "scope": "all",
+        "where": "All slides",
+        "params": {
+          "allowed": ["TOP SECRET", "SECRET", "CONFIDENTIAL", "RESTRICTED"],
+          "mustMatchDocumentClassification": true
+        }
+      }
+    },
+    {
+      "id": "pres.dates-day-month-year",
+      "title": "Dates in day-month-year order",
+      "description": "Dates on slides must be written in day-month-year order (e.g. 13 Aug 26) with no leading noughts and no comma.",
+      "chapter": "2",
+      "paragraphs": "205",
+      "severity": "warning",
+      "appliesTo": ["presentation"],
+      "check": {
+        "type": "date-format",
+        "scope": "all",
+        "where": "Slide text",
+        "params": {
+          "pattern": "\\b\\d{1,2}\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\\d{2}\\b",
+          "expect": "present"
+        }
+      }
+    },
+    {
+      "id": "pres.abbreviation-explained",
+      "title": "Abbreviations explained on first use",
+      "description": "Abbreviations must be written in full the first time they are used, followed by the abbreviation in brackets, on the slide where they first appear.",
+      "chapter": "16",
+      "paragraphs": "1601",
+      "severity": "warning",
+      "appliesTo": ["presentation"],
+      "check": {
+        "type": "abbreviation-usage",
+        "scope": "all",
+        "where": "Slide text",
+        "params": { "rule": "explained-on-first-use" }
+      }
+    },
+    {
+      "id": "pres.concise-essentials",
+      "title": "Confine slides to essentials",
+      "description": "Briefings must be confined to essentials; commanders are busy and must not be bothered with unnecessary detail (avoid dense, full-sentence slides).",
+      "chapter": "7",
+      "paragraphs": "711b",
+      "severity": "warning",
+      "manual": true,
+      "notes": "Human review: scan each slide for dense blocks of full-sentence text and split or reduce to key points.",
+      "appliesTo": ["presentation"]
+    },
+    {
+      "id": "pres.aim-stated",
+      "title": "Aim stated at the outset",
+      "description": "The briefing should open by stating its aim, in line with the requirement and terms of reference (Step One — The Scope).",
+      "chapter": "7",
+      "paragraphs": "714a",
+      "severity": "warning",
+      "manual": true,
+      "notes": "Human review: confirm the aim of the briefing is stated early, e.g. 'The aim of this briefing is to ...'.",
+      "appliesTo": ["presentation"]
+    },
+    {
+      "id": "pres.legible-sizes",
+      "title": "Legible, consistent text sizes",
+      "description": "Body text must be large enough to be read from the back of the room and sizes should be consistent across slides.",
+      "chapter": "7",
+      "paragraphs": "711b",
+      "severity": "warning",
+      "manual": true,
+      "notes": "Human review: check font sizes are legible at the back of the room and consistent slide-to-slide.",
+      "appliesTo": ["presentation"]
+    },
+    {
+      "id": "pres.slide-numbers",
+      "title": "Slide numbers",
+      "description": "Slides should be numbered so the audience and the officer can refer to a specific slide during discussion and decision points.",
+      "chapter": "7",
+      "paragraphs": "707-711",
+      "severity": "info",
+      "manual": true,
+      "notes": "Human review: confirm slide numbers are visible on each slide (e.g. 'Slide 3 of 12').",
+      "appliesTo": ["presentation"]
+    }
+  ]
+}

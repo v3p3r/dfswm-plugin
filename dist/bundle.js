@@ -5,20 +5,35 @@
 
   function def(id, fn) { modules[id] = { fn: fn, exports: {}, loaded: false }; }
 
-  // Keys are registered WITH the .js extension (e.g. "model.js"); require()
-  // calls use "./model.js" — strip only the relative prefix.
-  function require(id) {
-    var key = String(id).replace(/^\.\//, "");
-    var m = modules[key];
-    if (!m) throw new Error("Module not found: " + id);
-    if (!m.loaded) {
-      m.loaded = true;
-      m.fn(m, m.exports, function (dep) { return require(dep); });
-    }
-    return m.exports;
+  // Resolve a require specifier (e.g. "./model.js", "../engine/model.js")
+  // against the caller's module key (e.g. "word/extractor.js").
+  function resolve(caller, spec) {
+    var id = String(spec);
+    if (id.charAt(0) !== ".") return id; // bare identifier
+    var dir = caller.indexOf("/") === -1 ? "" : caller.slice(0, caller.lastIndexOf("/"));
+    var parts = dir ? dir.split("/") : [];
+    id.split("/").forEach(function (seg) {
+      if (seg === "." || seg === "") return;
+      if (seg === "..") parts.pop();
+      else parts.push(seg);
+    });
+    return parts.join("/");
   }
 
-def("model.js", function (module, exports, require) {
+  function makeRequire(caller) {
+    return function (id) {
+      var key = resolve(caller, id);
+      var m = modules[key];
+      if (!m) throw new Error("Module not found: " + id + " (key: " + key + ")");
+      if (!m.loaded) {
+        m.loaded = true;
+        m.fn(m, m.exports, makeRequire(key));
+      }
+      return m.exports;
+    };
+  }
+
+def("engine/model.js", function (module, exports, require) {
 /**
  * DFSWM Compliance Plugin — document model.
  *
@@ -41,6 +56,8 @@ def("model.js", function (module, exports, require) {
  *   keepPrevious    paragraph.keepPrevious
  *   headingLevel    null | "subject" | "main" | "group" | "paragraph"
  *   pageBreakBefore true when the paragraph starts a new page
+ *   slideIndex      slide number (0-based) when the paragraph came from a
+ *                   PowerPoint slide; null for Word documents
  *
  * Section fields:
  *   margins   { left, right, top, bottom } in cm
@@ -85,6 +102,7 @@ function normalizeModel(raw) {
     keepPrevious: !!p.keepPrevious,
     headingLevel: p.headingLevel || null,
     pageBreakBefore: !!p.pageBreakBefore,
+    slideIndex: p.slideIndex != null ? p.slideIndex : null,
   }));
   const sections = (raw.sections || []).map((s) => ({
     margins: s.margins || { left: null, right: null, top: null, bottom: null },
@@ -147,6 +165,10 @@ function paragraphsForScope(model, scope) {
       return nonBlank.slice(-3);
     }
     case "first-page": {
+      // Presentations: "first page" is slide 1.
+      if (all.some((p) => p.slideIndex != null)) {
+        return all.filter((p) => p.slideIndex === 0);
+      }
       const cut = all.findIndex((p) => p.pageBreakBefore && p.index > 0);
       const end = cut === -1 ? Math.min(10, all.length) : cut;
       return all.slice(0, end);
@@ -212,7 +234,7 @@ module.exports = {
 
 });
 
-def("evaluators.js", function (module, exports, require) {
+def("engine/evaluators.js", function (module, exports, require) {
 /**
  * DFSWM Compliance Plugin — evaluators.
  *
@@ -859,13 +881,14 @@ module.exports = { EVALUATORS, finding, uncheckable };
 
 });
 
-def("engine.js", function (module, exports, require) {
+def("engine/engine.js", function (module, exports, require) {
 /**
  * DFSWM Compliance Plugin — engine.
  *
  * runCompliance(model, { docType, rulesets, references }) => Report
  *
- *   model      normalised document model (see model.js)
+ *   model      raw OR normalised document model (see model.js); it is
+ *              normalised once inside runCompliance before any evaluator runs
  *   docType    selected document type id (see dfswm-rulesets/index.json)
  *   rulesets   array of ruleset objects (id, rules[])
  *   references optional { abbreviations: string[] } for abbreviation checks
@@ -877,7 +900,7 @@ def("engine.js", function (module, exports, require) {
 "use strict";
 
 const { EVALUATORS, finding, uncheckable } = require("./evaluators.js");
-const { textForScope, fullText } = require("./model.js");
+const { normalizeModel, textForScope, fullText } = require("./model.js");
 
 /**
  * True when a rule applies to the selected document type.
@@ -909,7 +932,11 @@ function runRule(rule, model, ctx) {
  * Run one or more rulesets against the model.
  * @returns {object} report
  */
-function runCompliance(model, { docType = "general", rulesets = [], references = null } = {}) {
+function runCompliance(rawModel, { docType = "general", rulesets = [], references = null } = {}) {
+  // Normalise once so every evaluator sees bodyText, indices and typed
+  // fields regardless of whether the caller passed a raw extractor model
+  // (Word/PowerPoint) or an already-normalised model. Idempotent.
+  const model = normalizeModel(rawModel);
   const ctx = { references, textForScope, fullText };
   const findings = [];
   let rulesEvaluated = 0;
@@ -957,7 +984,7 @@ module.exports = { runCompliance, runRule, ruleApplies, groupBySeverity };
 
 });
 
-def("extractor.js", function (module, exports, require) {
+def("word/extractor.js", function (module, exports, require) {
 /**
  * DFSWM Compliance Plugin — Word document extractor.
  *
@@ -1123,7 +1150,7 @@ module.exports = { extractDocumentModel };
 
 });
 
-def("fixer.js", function (module, exports, require) {
+def("word/fixer.js", function (module, exports, require) {
 /**
  * DFSWM Compliance Plugin — autofix layer.
  *
@@ -1249,11 +1276,269 @@ module.exports = { applyFix };
 
 });
 
+def("powerpoint/extractor.js", function (module, exports, require) {
+/**
+ * DFSWM Compliance Plugin — PowerPoint presentation extractor.
+ *
+ * Maps the open presentation into the same plain, serialisable model the
+ * Word extractor produces (see ../engine/model.js), so the engine and its
+ * evaluators are host-agnostic. Each text-bearing shape's paragraphs become
+ * model paragraphs tagged with their slideIndex.
+ *
+ * This file only runs inside the Office task pane (browser). The pure
+ * mapping function is exported so it can be unit-tested in Node.
+ */
+"use strict";
+
+const PPT_ALIGN = {
+  "Left": "left",
+  "Center": "center",
+  "Right": "right",
+  "Justify": "justified",
+  "Distribute": "justified",
+  "JustifyLow": "justified",
+  "ThaiDistribute": "justified",
+};
+
+/**
+ * Pure mapping: plain slide data -> raw model (same shape as the Word
+ * extractor's output, consumable directly by the engine).
+ *
+ * slidesData: [{ name, shapes: [{ name, hasTextFrame,
+ *   paragraphs: [{ text, fontName, fontSize, bold, italic, underline,
+ *                  alignment }] }] }]
+ */
+function mapPresentationToModel(slidesData) {
+  const paragraphs = [];
+  (slidesData || []).forEach((slide, slideIndex) => {
+    (slide.shapes || []).forEach((shape) => {
+      if (!shape.hasTextFrame) return;
+      (shape.paragraphs || []).forEach((p) => {
+        const t = String(p.text || "").trim();
+        if (!t) return;
+        paragraphs.push({
+          text: t,
+          style: null,
+          fontName: p.fontName || null,
+          fontSize: p.fontSize ?? null,
+          bold: !!p.bold,
+          italic: !!p.italic,
+          underline: !!p.underline,
+          allCaps: false, // PPT font.allCaps is not reliably exposed; evaluators compare text
+          alignment: PPT_ALIGN[p.alignment] || "left",
+          firstLineIndentCm: null,
+          blockIndentCm: null,
+          lineSpacing: null,
+          keepWithNext: false,
+          keepPrevious: false,
+          headingLevel: null,
+          pageBreakBefore: false,
+          slideIndex,
+        });
+      });
+    });
+  });
+
+  // Heading heuristic (mirrors the Word extractor): bold + short text.
+  paragraphs.forEach((p) => {
+    const t = p.text.trim();
+    if (!t) return;
+    if (t.length > 90 || !p.bold) return;
+    const allCaps = t === t.toUpperCase();
+    if (p.alignment === "center" && allCaps) p.headingLevel = "subject";
+    else if (allCaps && p.alignment !== "center") p.headingLevel = "group";
+    else if (/^[A-Z][a-z]/.test(t)) p.headingLevel = "paragraph";
+  });
+
+  return {
+    docType: "presentation",
+    title: null,
+    paragraphs: paragraphs.map((p, i) => ({ ...p, index: i })),
+    sections: [], // PowerPoint has no page setup; layout rules do not apply
+    tables: [],
+    footnotes: [],
+  };
+}
+
+/**
+ * Read the open presentation into a model object via the PowerPoint JS API.
+ * @returns {Promise<object>} raw model (consumed directly by runCompliance)
+ */
+async function extractPresentationModel() {
+  return PowerPoint.run(async (context) => {
+    const slides = context.presentation.slides;
+    const slideData = [];
+    const jobs = []; // { slide, shape, paragraphs }
+
+    for (let s = 0; s < slides.items.length; s++) {
+      const slide = slides.items[s];
+      const shapes = slide.shapes;
+      const shapesData = [];
+      for (let i = 0; i < shapes.items.length; i++) {
+        const shape = shapes.items[i];
+        shape.load("name");
+        shape.load("hasTextFrame");
+        shapesData.push({ name: null, hasTextFrame: false, paragraphs: [] });
+        jobs.push({ slideIndex: s, shape, shapeData: shapesData[shapesData.length - 1] });
+      }
+      slideData.push({ name: null, shapes: shapesData });
+    }
+    await context.sync();
+
+    // Second pass: for shapes with a text frame, load paragraph text and
+    // per-paragraph font/alignment via path-based loads so every item's
+    // child properties are populated after the sync.
+    for (const job of jobs) {
+      if (!job.shape.hasTextFrame) continue;
+      const textRange = job.shape.textFrame.textRange;
+      const paras = textRange.paragraphs;
+      paras.load("text, font/name, font/size, font/bold, font/italic, font/underline, paragraphFormat/alignment");
+      job.paras = paras;
+    }
+    await context.sync();
+
+    // Read the loaded values into plain data.
+    for (const job of jobs) {
+      job.shapeData.name = job.shape.name;
+      job.shapeData.hasTextFrame = job.shape.hasTextFrame;
+      if (!job.paras) continue;
+      for (const p of job.paras.items) {
+        job.shapeData.paragraphs.push({
+          text: p.text,
+          fontName: p.font.name,
+          fontSize: p.font.size,
+          bold: p.font.bold,
+          italic: p.font.italic,
+          underline: p.font.underline,
+          alignment: p.paragraphFormat.alignment,
+        });
+      }
+    }
+
+    return mapPresentationToModel(slideData);
+  });
+}
+
+module.exports = { extractPresentationModel, mapPresentationToModel };
+
+});
+
+def("powerpoint/fixer.js", function (module, exports, require) {
+/**
+ * DFSWM Compliance Plugin — PowerPoint autofix layer.
+ *
+ * Applies the subset of fix actions that make sense on slides using the
+ * PowerPoint JavaScript API. Word-only actions (margins, page numbers, line
+ * spacing, keep-with-next, copy numbers) return ok:false with instructions.
+ */
+"use strict";
+
+const PPT_ALIGN = {
+  left: "Left",
+  center: "Center",
+  right: "Right",
+  justified: "Justify",
+};
+
+/**
+ * Iterate every text-bearing shape in the deck and apply a font-level
+ * mutation queued inside a single PowerPoint.run batch.
+ * @param {function} applyFont (font, context) => void
+ */
+async function mutateAllText(applyFont) {
+  return PowerPoint.run(async (context) => {
+    const slides = context.presentation.slides;
+    const jobs = [];
+    for (let s = 0; s < slides.items.length; s++) {
+      const shapes = slides.items[s].shapes;
+      for (let i = 0; i < shapes.items.length; i++) {
+        const shape = shapes.items[i];
+        shape.load("hasTextFrame");
+        jobs.push(shape);
+      }
+    }
+    await context.sync();
+    for (const shape of jobs) {
+      if (!shape.hasTextFrame) continue;
+      const font = shape.textFrame.textRange.font;
+      applyFont(font);
+    }
+    await context.sync();
+  });
+}
+
+/**
+ * Apply a fix object produced by an evaluator.
+ * @returns {Promise<{ok: boolean, message: string}>}
+ */
+async function applyFix(fix) {
+  if (!fix || !fix.action) return { ok: false, message: "No fix provided." };
+  try {
+    switch (fix.action) {
+      case "setFont":
+        await mutateAllText((font) => {
+          font.name = fix.params.fontName;
+        });
+        return { ok: true, message: `Font set to ${fix.params.fontName} on all slide text.` };
+      case "setFontSize":
+        await mutateAllText((font) => {
+          font.size = fix.params.size;
+        });
+        return { ok: true, message: `Font size set to ${fix.params.size} pt on all slide text.` };
+      case "setBold":
+        await mutateAllText((font) => {
+          font.bold = fix.params.bold;
+        });
+        return { ok: true, message: `Bold ${fix.params.bold ? "applied" : "removed"} on all slide text.` };
+      case "removeUnderline":
+        await mutateAllText((font) => {
+          font.underline = "None";
+        });
+        return { ok: true, message: "Underlining removed from all slide text." };
+      case "setAlignment":
+        return await PowerPoint.run(async (context) => {
+          const slides = context.presentation.slides;
+          const jobs = [];
+          for (let s = 0; s < slides.items.length; s++) {
+            const shapes = slides.items[s].shapes;
+            for (let i = 0; i < shapes.items.length; i++) {
+              const shape = shapes.items[i];
+              shape.load("hasTextFrame");
+              jobs.push(shape);
+            }
+          }
+          await context.sync();
+          for (const shape of jobs) {
+            if (!shape.hasTextFrame) continue;
+            const paras = shape.textFrame.textRange.paragraphs;
+            paras.load("text");
+            for (const p of paras.items) {
+              p.paragraphFormat.alignment = PPT_ALIGN[fix.params.alignment] || "Left";
+            }
+          }
+          await context.sync();
+          return { ok: true, message: `Alignment set to ${fix.params.alignment}.` };
+        });
+      default:
+        return { ok: false, message: `Fix '${fix.action}' is not supported in PowerPoint — apply it manually.` };
+    }
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+}
+
+module.exports = { applyFix };
+
+});
+
+  var require = makeRequire("");
   window.DFSWM = {
-    runCompliance: require("engine.js").runCompliance,
-    groupBySeverity: require("engine.js").groupBySeverity,
-    normalizeModel: require("model.js").normalizeModel,
-    extractDocumentModel: require("extractor.js").extractDocumentModel,
-    applyFix: require("fixer.js").applyFix
+    runCompliance: require("engine/engine.js").runCompliance,
+    groupBySeverity: require("engine/engine.js").groupBySeverity,
+    normalizeModel: require("engine/model.js").normalizeModel,
+    extractDocumentModel: require("word/extractor.js").extractDocumentModel,
+    applyFix: require("word/fixer.js").applyFix,
+    extractPresentationModel: require("powerpoint/extractor.js").extractPresentationModel,
+    applyPptFix: require("powerpoint/fixer.js").applyFix
   };
 })();

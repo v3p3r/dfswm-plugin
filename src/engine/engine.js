@@ -3,7 +3,8 @@
  *
  * runCompliance(model, { docType, rulesets, references }) => Report
  *
- *   model      normalised document model (see model.js)
+ *   model      raw OR normalised document model (see model.js); it is
+ *              normalised once inside runCompliance before any evaluator runs
  *   docType    selected document type id (see dfswm-rulesets/index.json)
  *   rulesets   array of ruleset objects (id, rules[])
  *   references optional { abbreviations: string[] } for abbreviation checks
@@ -15,7 +16,7 @@
 "use strict";
 
 const { EVALUATORS, finding, uncheckable } = require("./evaluators.js");
-const { textForScope, fullText } = require("./model.js");
+const { normalizeModel, textForScope, fullText } = require("./model.js");
 
 /**
  * True when a rule applies to the selected document type.
@@ -47,7 +48,11 @@ function runRule(rule, model, ctx) {
  * Run one or more rulesets against the model.
  * @returns {object} report
  */
-function runCompliance(model, { docType = "general", rulesets = [], references = null } = {}) {
+function runCompliance(rawModel, { docType = "general", rulesets = [], references = null } = {}) {
+  // Normalise once so every evaluator sees bodyText, indices and typed
+  // fields regardless of whether the caller passed a raw extractor model
+  // (Word/PowerPoint) or an already-normalised model. Idempotent.
+  const model = normalizeModel(rawModel);
   const ctx = { references, textForScope, fullText };
   const findings = [];
   let rulesEvaluated = 0;

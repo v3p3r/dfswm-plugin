@@ -1,17 +1,21 @@
 /**
  * DFSWM Compliance Plugin — task pane controller.
- * Wires the UI to the ruleset loader, engine and Word extractor/fixer.
+ * Wires the UI to the ruleset loader, engine and the host-specific
+ * extractor/fixer (Word or PowerPoint).
  */
 "use strict";
 
 (function () {
-  const { runCompliance, groupBySeverity, extractDocumentModel, applyFix } = window.DFSWM;
+  const { runCompliance, groupBySeverity } = window.DFSWM;
 
   // Rulesets are synced into dfswm-plugin/rulesets/ and dfswm-plugin/index.json
   // by scripts/sync-rulesets.js (paths relative to src/taskpane.html).
   const RULESET_BASE = "../rulesets";
   const INDEX_URL = "../index.json";
 
+  let host = null; // "Word" | "PowerPoint"
+  let extractModel = null; // host-specific extractor
+  let applyFix = null; // host-specific fixer
   let index = null;
   let rulesets = [];
   let docType = "general";
@@ -62,11 +66,15 @@
     sel.innerHTML = "";
     const keys = Object.keys(index.documentTypes).sort();
     for (const key of keys) {
+      // PowerPoint only supports the presentation doc type.
+      if (host === "PowerPoint" && key !== "presentation") continue;
       const opt = document.createElement("option");
       opt.value = key;
       opt.textContent = index.documentTypes[key].label;
       sel.appendChild(opt);
     }
+    if (host === "PowerPoint") docType = "presentation";
+    sel.value = docType;
     sel.addEventListener("change", () => {
       docType = sel.value;
       activeRulesetIds = null;
@@ -175,7 +183,7 @@
     setStatus("Checking document…", true);
     $("run-check").disabled = true;
     try {
-      lastModel = await extractDocumentModel();
+      lastModel = await extractModel();
       lastModel.docType = docType;
       const report = runCompliance(lastModel, { docType, rulesets: selectedRulesets() });
       lastReport = report;
@@ -214,8 +222,15 @@
   }
 
   Office.onReady((info) => {
-    if (info.host !== "Word") {
-      setStatus("This add-in only supports Microsoft Word.");
+    host = info.host;
+    if (host === "Word") {
+      extractModel = window.DFSWM.extractDocumentModel;
+      applyFix = window.DFSWM.applyFix;
+    } else if (host === "PowerPoint") {
+      extractModel = window.DFSWM.extractPresentationModel;
+      applyFix = window.DFSWM.applyPptFix;
+    } else {
+      setStatus("This add-in supports Microsoft Word and PowerPoint.");
       return;
     }
     bind();

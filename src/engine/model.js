@@ -20,6 +20,8 @@
  *   keepPrevious    paragraph.keepPrevious
  *   headingLevel    null | "subject" | "main" | "group" | "paragraph"
  *   pageBreakBefore true when the paragraph starts a new page
+ *   slideIndex      slide number (0-based) when the paragraph came from a
+ *                   PowerPoint slide; null for Word documents
  *
  * Section fields:
  *   margins   { left, right, top, bottom } in cm
@@ -64,6 +66,7 @@ function normalizeModel(raw) {
     keepPrevious: !!p.keepPrevious,
     headingLevel: p.headingLevel || null,
     pageBreakBefore: !!p.pageBreakBefore,
+    slideIndex: p.slideIndex != null ? p.slideIndex : null,
   }));
   const sections = (raw.sections || []).map((s) => ({
     margins: s.margins || { left: null, right: null, top: null, bottom: null },
@@ -126,6 +129,10 @@ function paragraphsForScope(model, scope) {
       return nonBlank.slice(-3);
     }
     case "first-page": {
+      // Presentations: "first page" is slide 1.
+      if (all.some((p) => p.slideIndex != null)) {
+        return all.filter((p) => p.slideIndex === 0);
+      }
       const cut = all.findIndex((p) => p.pageBreakBefore && p.index > 0);
       const end = cut === -1 ? Math.min(10, all.length) : cut;
       return all.slice(0, end);
