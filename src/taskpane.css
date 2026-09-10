@@ -56,6 +56,28 @@ body {
   overflow-y: auto;
   padding: 16px;
 }
+
+/* Progress bar */
+.progress-wrap {
+  height: 3px;
+  background: var(--line);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--army);
+  transition: width 0.2s ease;
+}
+.progress-wrap.busy .progress-bar {
+  width: 40%;
+  animation: busy-slide 1.1s ease-in-out infinite;
+}
+@keyframes busy-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(340%); }
+}
 .pane { display: flex; flex-direction: column; gap: 12px; }
 
 .field-label {
@@ -109,6 +131,25 @@ body {
   padding: 4px 10px; border-radius: 6px; cursor: pointer;
 }
 .btn-fix:hover { background: var(--army); color: #fff; }
+
+/* Results toolbar */
+.results-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.results-toolbar .btn { flex: 1; }
+
+/* More locations */
+.finding-more summary {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.finding-more summary:hover { color: var(--army); }
+.finding-more .finding-loc { margin-top: 4px; }
 
 /* Summary */
 .summary {

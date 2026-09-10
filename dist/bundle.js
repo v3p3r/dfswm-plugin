@@ -193,7 +193,11 @@ function textForScope(model, scope) {
   }
   if (scope === "table") {
     return model.tables
-      .map((t) => t.rows.map((r) => r.map((c) => c.text).join(" | ")).join("\n"))
+      .map((t) => {
+        const header = t.headerRow.length ? [t.headerRow.join(" | ")] : [];
+        const body = t.rows.map((r) => r.map((c) => c.text).join(" | "));
+        return header.concat(body).join("\n");
+      })
       .join("\n");
   }
   if (scope === "table-column-head") {
@@ -288,6 +292,31 @@ function escapeRegExp(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Derive the search/replacement pair for an applyRegexFix autofix, or null
+ * when the rule declares no replacement and the pattern is not one of the
+ * known ones (never default to deleting matched text blindly).
+ * Rulesets may declare `autofix.replacement` directly.
+ */
+function regexFixFor(rule, params) {
+  if (rule.autofix && typeof rule.autofix.replacement === "string") {
+    return { pattern: params.pattern, replacement: rule.autofix.replacement };
+  }
+  if (params.pattern === "[,;:.!?] {2,}") {
+    // Keep the punctuation, collapse the following run of spaces.
+    return { pattern: "([,;:.!?]) {2,}", replacement: "$1 " };
+  }
+  if (/\\bmidnight\\b/i.test(params.pattern)) {
+    return { pattern: params.pattern, replacement: "0000 hours" };
+  }
+  if (params.pattern === "\\b[A-Z]{2,}\\.") {
+    // Only strip full stops clearly inside a sentence (followed by a space
+    // plus lower-case/digit); never sentence-final full stops.
+    return { pattern: "\\b([A-Z]{2,})\\.(?=\\s+[a-z0-9])", replacement: "$1" };
+  }
+  return null;
+}
+
 const EVALUATORS = {};
 
 /* ------------------------------------------------------------------ */
@@ -372,6 +401,7 @@ EVALUATORS["italic"] = (model, rule) => {
   if (!bad.length) return [];
   return [finding(rule, "Quoted text or publication titles should be italicised.", {
     locations: bad.slice(0, 10).map((p) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
+    fix: expected ? { action: "setItalic", params: { italic: true } } : null,
   })];
 };
 
@@ -466,9 +496,12 @@ EVALUATORS["keep-with-next"] = (model, rule) => {
   const scope = paragraphsForScope(model, rule.check.scope);
   const bad = scope.filter((p) => p.text.trim() && (keepWithNext ? !p.keepWithNext : !p.keepPrevious));
   if (!bad.length) return [];
+  const fixParams = {};
+  if (keepWithNext) fixParams.keepWithNext = true;
+  if (keepWithPrevious) fixParams.keepWithPrevious = true;
   return [finding(rule, `${bad.length} item(s) are at risk of being stranded at a page boundary (hanging heading / orphaned signature).`, {
     locations: bad.slice(0, 10).map((p) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
-    fix: { action: "keepWithNext", params: { keepWithNext } },
+    fix: { action: "keepWithNext", params: fixParams },
   })];
 };
 
@@ -527,9 +560,11 @@ EVALUATORS["heading-style"] = (model, rule) => {
     if (list.length) issues.push({ p, list });
   }
   if (!issues.length) return [];
+  const fixParams = { ...params };
+  if (params.sizeOffsetPoints && bodySize != null) fixParams.size = bodySize + params.sizeOffsetPoints;
   return [finding(rule, `${issues.length} heading(s) do not conform: ${issues[0].list.join("; ")}.`, {
     locations: issues.map(({ p }) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
-    fix: { action: "fixHeading", params },
+    fix: { action: "fixHeading", params: fixParams },
   })];
 };
 
@@ -707,8 +742,9 @@ EVALUATORS["regex"] = (model, rule) => {
   const expect = params.expect || "present";
 
   if (expect === "absent" && found) {
+    const fixParams = !params.mustBeBold && rule.autofix && rule.autofix.available ? regexFixFor(rule, params) : null;
     return [finding(rule, `Found forbidden text matching '${params.pattern}': "${String(matches[0]).slice(0, 60)}".`, {
-      fix: params.mustBeBold ? null : rule.autofix && rule.autofix.available ? { action: "applyRegexFix", params: { pattern: params.pattern } } : null,
+      fix: fixParams ? { action: "applyRegexFix", params: fixParams } : null,
     })];
   }
   if (expect === "present" && !found) {
@@ -951,6 +987,13 @@ function runCompliance(rawModel, { docType = "general", rulesets = [], reference
       rulesEvaluated += 1;
       const results = runRule(rule, model, ctx);
       for (const f of results) {
+        // Carry the finding's locations onto its fix object so the host
+        // fixer can target exactly the flagged paragraphs instead of the
+        // whole document. Document-level fixes (margins, page numbers,
+        // copy numbers) get an empty list and are applied document-wide.
+        if (f.fix && f.fix.locations === undefined) {
+          f.fix = { ...f.fix, locations: f.locations || [] };
+        }
         findings.push({ ...f, rulesetId: ruleset.id, rulesetTitle: ruleset.title || ruleset.id });
       }
     }
@@ -1155,7 +1198,13 @@ def("word/fixer.js", function (module, exports, require) {
  * DFSWM Compliance Plugin — autofix layer.
  *
  * Applies simple, safe fixes to the open Word document. Each fix is an
- * object produced by an evaluator: { action, params }.
+ * object produced by an evaluator: { action, params, locations }.
+ *
+ * The engine attaches the finding's locations (paragraph indices in the
+ * document body) onto every fix, so paragraph-level fixes here mutate only
+ * the flagged paragraphs instead of the whole document. Document-level
+ * fixes (margins, page numbers, copy numbers) carry an empty location list
+ * and are applied document-wide as before.
  */
 "use strict";
 
@@ -1166,59 +1215,141 @@ const ALIGN = {
   justified: "Word.Alignment.justified",
 };
 
+const TITLE_CASE_MINOR = new Set([
+  "of", "and", "to", "the", "from", "a", "an", "in", "on", "at", "for", "with", "by",
+]);
+
+function titleCase(s) {
+  return s.split(/\s+/).map((word, i) => {
+    const lower = word.toLowerCase();
+    if (i > 0 && TITLE_CASE_MINOR.has(lower)) return lower;
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(" ");
+}
+
+/**
+ * Paragraph indices a fix should target, or null when there are none
+ * (document-level fix => apply to every paragraph as a fallback).
+ */
+function paragraphTargetSet(fix) {
+  const locs = (fix.locations || [])
+    .map((l) => l.paragraphIndex)
+    .filter((n) => Number.isInteger(n));
+  return locs.length ? new Set(locs) : null;
+}
+
+/**
+ * Run a Word batch with the body paragraphs loaded and handed to `fn`.
+ * `fn(context, paragraphs)` returns a value that is passed through.
+ */
+async function withBodyParagraphs(fn) {
+  return Word.run(async (context) => {
+    const paragraphs = context.document.body.paragraphs;
+    paragraphs.load(["text", "font"]);
+    await context.sync();
+    const result = await fn(context, paragraphs.items);
+    await context.sync();
+    return result;
+  });
+}
+
+/** Narrow a collection to the target indices (or keep all when null). */
+function pickParagraphs(items, targets) {
+  return targets ? items.filter((p, i) => targets.has(i)) : Array.from(items);
+}
+
 async function applyFix(fix) {
   if (!fix || !fix.action) return { ok: false, message: "No fix provided." };
   try {
     switch (fix.action) {
       case "setFont":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          body.font.name = fix.params.fontName;
-          await context.sync();
-          return { ok: true, message: `Font set to ${fix.params.fontName}.` };
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.font.name = fix.params.fontName;
+          return { ok: true, message: `Font set to ${fix.params.fontName} on ${list.length} paragraph(s).` };
         });
       case "setFontSize":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          body.font.size = fix.params.size;
-          await context.sync();
-          return { ok: true, message: `Body font size set to ${fix.params.size} pt.` };
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.font.size = fix.params.size;
+          return { ok: true, message: `Font size set to ${fix.params.size} pt on ${list.length} paragraph(s).` };
         });
       case "setAlignment":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          body.paragraphs.load("alignment");
-          await context.sync();
-          for (const p of body.paragraphs.items) {
-            p.alignment = ALIGN[fix.params.alignment] || "Word.Alignment.justified";
-          }
-          await context.sync();
-          return { ok: true, message: `Alignment set to ${fix.params.alignment}.` };
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.alignment = ALIGN[fix.params.alignment] || "Word.Alignment.justified";
+          return { ok: true, message: `Alignment set to ${fix.params.alignment} on ${list.length} paragraph(s).` };
         });
       case "setBold":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          body.font.bold = fix.params.bold;
-          await context.sync();
-          return { ok: true, message: `Bold ${fix.params.bold ? "applied" : "removed"}.` };
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.font.bold = fix.params.bold;
+          return { ok: true, message: `Bold ${fix.params.bold ? "applied" : "removed"} on ${list.length} paragraph(s).` };
+        });
+      case "setItalic":
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.font.italic = fix.params.italic;
+          return { ok: true, message: `Italic ${fix.params.italic ? "applied" : "removed"} on ${list.length} paragraph(s).` };
         });
       case "removeUnderline":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          body.font.underline = "Word.UnderlineType.none";
-          await context.sync();
-          return { ok: true, message: "Underlining removed." };
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.font.underline = "Word.UnderlineType.none";
+          return { ok: true, message: `Underlining removed from ${list.length} paragraph(s).` };
         });
       case "setLineSpacing":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
+        return await withBodyParagraphs(async (context, items) => {
           const spacing = fix.params.spacing === "double" ? 2.0 : fix.params.spacing === "oneAndHalf" ? 1.5 : 1.0;
-          for (const p of body.paragraphs.items) {
-            p.lineSpacing = spacing;
-          }
-          await context.sync();
-          return { ok: true, message: `Line spacing set to ${fix.params.spacing}.` };
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) p.lineSpacing = spacing;
+          return { ok: true, message: `Line spacing set to ${fix.params.spacing} on ${list.length} paragraph(s).` };
         });
+      case "keepWithNext":
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) {
+            if (fix.params.keepWithNext) p.keepWithNext = true;
+            if (fix.params.keepWithPrevious) p.keepPrevious = true;
+          }
+          return { ok: true, message: `Keep-together applied to ${list.length} paragraph(s).` };
+        });
+      case "fixHeading": {
+        const params = fix.params;
+        return await withBodyParagraphs(async (context, items) => {
+          const list = pickParagraphs(items, paragraphTargetSet(fix));
+          for (const p of list) {
+            let text = p.text;
+            let changed = false;
+            if (params.caps && text !== text.toUpperCase()) { text = text.toUpperCase(); changed = true; }
+            else if (params.titleCase) {
+              const tc = titleCase(text);
+              if (tc !== text) { text = tc; changed = true; }
+            }
+            if (params.noTrailingFullStop && /\.\s*$/.test(text)) { text = text.replace(/\.\s*$/, ""); changed = true; }
+            if (params.trailingFullStop && !/\.\s*$/.test(text)) { text = text.trimEnd() + "."; changed = true; }
+            if (changed) p.insertText(text, "Replace");
+            if (params.alignment) p.alignment = ALIGN[params.alignment] || "Word.Alignment.justified";
+            if (params.bold) p.font.bold = true;
+            if (params.size) p.font.size = params.size;
+          }
+          return { ok: true, message: `Formatted ${list.length} heading(s).` };
+        });
+      }
+      case "applyRegexFix": {
+        const re = new RegExp(fix.params.pattern, "gm");
+        const replacement = typeof fix.params.replacement === "string" ? fix.params.replacement : "";
+        return await withBodyParagraphs(async (context, items) => {
+          let fixed = 0;
+          for (const p of items) {
+            if (!re.test(p.text)) continue;
+            re.lastIndex = 0;
+            const newText = p.text.replace(re, replacement);
+            if (newText !== p.text) { p.insertText(newText, "Replace"); fixed += 1; }
+          }
+          return { ok: true, message: `Applied text fix to ${fixed} paragraph(s).` };
+        });
+      }
       case "setMargins":
         return await Word.run(async (context) => {
           const sections = context.document.sections;
@@ -1244,15 +1375,6 @@ async function applyFix(fix) {
               : "Margins updated.",
           };
         });
-      case "keepWithNext":
-        return await Word.run(async (context) => {
-          const body = context.document.body;
-          for (const p of body.paragraphs.items) {
-            p.keepWithNext = true;
-          }
-          await context.sync();
-          return { ok: true, message: "Keep-with-next applied to prevent hanging headings." };
-        });
       case "insertPageNumber":
         // Word JS cannot insert a PAGE field directly; instruct the user.
         return { ok: false, message: "Insert the page number manually: Insert tab > Page Number > Bottom Center." };
@@ -1273,7 +1395,6 @@ async function applyFix(fix) {
 }
 
 module.exports = { applyFix };
-
 });
 
 def("powerpoint/extractor.js", function (module, exports, require) {
@@ -1428,8 +1549,11 @@ def("powerpoint/fixer.js", function (module, exports, require) {
  * DFSWM Compliance Plugin — PowerPoint autofix layer.
  *
  * Applies the subset of fix actions that make sense on slides using the
- * PowerPoint JavaScript API. Word-only actions (margins, page numbers, line
- * spacing, keep-with-next, copy numbers) return ok:false with instructions.
+ * PowerPoint JavaScript API. Paragraph-level fixes target exactly the
+ * flagged model paragraphs (via fix.locations), mirroring the extractor's
+ * slide → shape → paragraph ordering and skipping blank lines. Word-only
+ * actions (margins, page numbers, line spacing, keep-with-next, copy
+ * numbers) return ok:false with instructions.
  */
 "use strict";
 
@@ -1440,31 +1564,78 @@ const PPT_ALIGN = {
   justified: "Justify",
 };
 
+const TITLE_CASE_MINOR = new Set([
+  "of", "and", "to", "the", "from", "a", "an", "in", "on", "at", "for", "with", "by",
+]);
+
+function titleCase(s) {
+  return s.split(/\s+/).map((word, i) => {
+    const lower = word.toLowerCase();
+    if (i > 0 && TITLE_CASE_MINOR.has(lower)) return lower;
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }).join(" ");
+}
+
+/** Paragraph indices a fix should target, or null when there are none. */
+function paragraphTargetSet(fix) {
+  const locs = (fix.locations || [])
+    .map((l) => l.paragraphIndex)
+    .filter((n) => Number.isInteger(n));
+  return locs.length ? new Set(locs) : null;
+}
+
 /**
- * Iterate every text-bearing shape in the deck and apply a font-level
- * mutation queued inside a single PowerPoint.run batch.
- * @param {function} applyFont (font, context) => void
+ * Iterate every text paragraph in the deck in the same order the extractor
+ * maps them into the model (slides, then shapes with a text frame, then
+ * paragraphs, skipping blank lines) and call `cb(paragraph, modelIndex)`.
+ * One PowerPoint.run batch is used for the whole traversal.
  */
-async function mutateAllText(applyFont) {
+async function forEachTextParagraph(cb) {
   return PowerPoint.run(async (context) => {
     const slides = context.presentation.slides;
-    const jobs = [];
-    for (let s = 0; s < slides.items.length; s++) {
-      const shapes = slides.items[s].shapes;
-      for (let i = 0; i < shapes.items.length; i++) {
-        const shape = shapes.items[i];
+    const shapes = [];
+    for (const slide of slides.items) {
+      for (const shape of slide.shapes.items) {
         shape.load("hasTextFrame");
-        jobs.push(shape);
+        shapes.push(shape);
       }
     }
     await context.sync();
-    for (const shape of jobs) {
+
+    const paraLists = [];
+    for (const shape of shapes) {
       if (!shape.hasTextFrame) continue;
-      const font = shape.textFrame.textRange.font;
-      applyFont(font);
+      const paras = shape.textFrame.textRange.paragraphs;
+      paras.load("text, font/name, font/size, font/bold, font/italic, font/underline, paragraphFormat/alignment");
+      paraLists.push(paras);
+    }
+    await context.sync();
+
+    let index = 0;
+    for (const paras of paraLists) {
+      for (const p of paras.items) {
+        const t = String(p.text || "").trim();
+        if (!t) continue;
+        await cb(p, index++);
+      }
     }
     await context.sync();
   });
+}
+
+/**
+ * Apply a font-level mutation to the targeted paragraphs.
+ * @param {function} applyFont (font, paragraph) => void
+ */
+async function mutateTargetedText(fix, applyFont) {
+  const targets = paragraphTargetSet(fix);
+  let count = 0;
+  await forEachTextParagraph((p, index) => {
+    if (targets && !targets.has(index)) return;
+    count += 1;
+    applyFont(p.font, p);
+  });
+  return count;
 }
 
 /**
@@ -1475,50 +1646,71 @@ async function applyFix(fix) {
   if (!fix || !fix.action) return { ok: false, message: "No fix provided." };
   try {
     switch (fix.action) {
-      case "setFont":
-        await mutateAllText((font) => {
-          font.name = fix.params.fontName;
+      case "setFont": {
+        const n = await mutateTargetedText(fix, (font) => { font.name = fix.params.fontName; });
+        return { ok: true, message: `Font set to ${fix.params.fontName} on ${n} paragraph(s).` };
+      }
+      case "setFontSize": {
+        const n = await mutateTargetedText(fix, (font) => { font.size = fix.params.size; });
+        return { ok: true, message: `Font size set to ${fix.params.size} pt on ${n} paragraph(s).` };
+      }
+      case "setBold": {
+        const n = await mutateTargetedText(fix, (font) => { font.bold = fix.params.bold; });
+        return { ok: true, message: `Bold ${fix.params.bold ? "applied" : "removed"} on ${n} paragraph(s).` };
+      }
+      case "setItalic": {
+        const n = await mutateTargetedText(fix, (font) => { font.italic = fix.params.italic; });
+        return { ok: true, message: `Italic ${fix.params.italic ? "applied" : "removed"} on ${n} paragraph(s).` };
+      }
+      case "removeUnderline": {
+        const n = await mutateTargetedText(fix, (font) => { font.underline = "None"; });
+        return { ok: true, message: `Underlining removed from ${n} paragraph(s).` };
+      }
+      case "setAlignment": {
+        const targets = paragraphTargetSet(fix);
+        let count = 0;
+        await forEachTextParagraph((p, index) => {
+          if (targets && !targets.has(index)) return;
+          count += 1;
+          p.paragraphFormat.alignment = PPT_ALIGN[fix.params.alignment] || "Left";
         });
-        return { ok: true, message: `Font set to ${fix.params.fontName} on all slide text.` };
-      case "setFontSize":
-        await mutateAllText((font) => {
-          font.size = fix.params.size;
-        });
-        return { ok: true, message: `Font size set to ${fix.params.size} pt on all slide text.` };
-      case "setBold":
-        await mutateAllText((font) => {
-          font.bold = fix.params.bold;
-        });
-        return { ok: true, message: `Bold ${fix.params.bold ? "applied" : "removed"} on all slide text.` };
-      case "removeUnderline":
-        await mutateAllText((font) => {
-          font.underline = "None";
-        });
-        return { ok: true, message: "Underlining removed from all slide text." };
-      case "setAlignment":
-        return await PowerPoint.run(async (context) => {
-          const slides = context.presentation.slides;
-          const jobs = [];
-          for (let s = 0; s < slides.items.length; s++) {
-            const shapes = slides.items[s].shapes;
-            for (let i = 0; i < shapes.items.length; i++) {
-              const shape = shapes.items[i];
-              shape.load("hasTextFrame");
-              jobs.push(shape);
-            }
+        return { ok: true, message: `Alignment set to ${fix.params.alignment} on ${count} paragraph(s).` };
+      }
+      case "fixHeading": {
+        const params = fix.params;
+        const targets = paragraphTargetSet(fix);
+        let count = 0;
+        await forEachTextParagraph((p, index) => {
+          if (targets && !targets.has(index)) return;
+          count += 1;
+          let text = p.text;
+          let changed = false;
+          if (params.caps && text !== text.toUpperCase()) { text = text.toUpperCase(); changed = true; }
+          else if (params.titleCase) {
+            const tc = titleCase(text);
+            if (tc !== text) { text = tc; changed = true; }
           }
-          await context.sync();
-          for (const shape of jobs) {
-            if (!shape.hasTextFrame) continue;
-            const paras = shape.textFrame.textRange.paragraphs;
-            paras.load("text");
-            for (const p of paras.items) {
-              p.paragraphFormat.alignment = PPT_ALIGN[fix.params.alignment] || "Left";
-            }
-          }
-          await context.sync();
-          return { ok: true, message: `Alignment set to ${fix.params.alignment}.` };
+          if (params.noTrailingFullStop && /\.\s*$/.test(text)) { text = text.replace(/\.\s*$/, ""); changed = true; }
+          if (params.trailingFullStop && !/\.\s*$/.test(text)) { text = text.trimEnd() + "."; changed = true; }
+          if (changed) p.text = text;
+          if (params.alignment) p.paragraphFormat.alignment = PPT_ALIGN[params.alignment] || "Left";
+          if (params.bold) p.font.bold = true;
+          if (params.size) p.font.size = params.size;
         });
+        return { ok: true, message: `Formatted ${count} heading(s).` };
+      }
+      case "applyRegexFix": {
+        const re = new RegExp(fix.params.pattern, "gm");
+        const replacement = typeof fix.params.replacement === "string" ? fix.params.replacement : "";
+        let fixed = 0;
+        await forEachTextParagraph((p) => {
+          if (!re.test(p.text)) return;
+          re.lastIndex = 0;
+          const newText = p.text.replace(re, replacement);
+          if (newText !== p.text) { p.text = newText; fixed += 1; }
+        });
+        return { ok: true, message: `Applied text fix to ${fixed} paragraph(s).` };
+      }
       default:
         return { ok: false, message: `Fix '${fix.action}' is not supported in PowerPoint — apply it manually.` };
     }
@@ -1528,7 +1720,6 @@ async function applyFix(fix) {
 }
 
 module.exports = { applyFix };
-
 });
 
   var require = makeRequire("");

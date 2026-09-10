@@ -67,6 +67,13 @@ function runCompliance(rawModel, { docType = "general", rulesets = [], reference
       rulesEvaluated += 1;
       const results = runRule(rule, model, ctx);
       for (const f of results) {
+        // Carry the finding's locations onto its fix object so the host
+        // fixer can target exactly the flagged paragraphs instead of the
+        // whole document. Document-level fixes (margins, page numbers,
+        // copy numbers) get an empty list and are applied document-wide.
+        if (f.fix && f.fix.locations === undefined) {
+          f.fix = { ...f.fix, locations: f.locations || [] };
+        }
         findings.push({ ...f, rulesetId: ruleset.id, rulesetTitle: ruleset.title || ruleset.id });
       }
     }

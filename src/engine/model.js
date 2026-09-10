@@ -157,7 +157,11 @@ function textForScope(model, scope) {
   }
   if (scope === "table") {
     return model.tables
-      .map((t) => t.rows.map((r) => r.map((c) => c.text).join(" | ")).join("\n"))
+      .map((t) => {
+        const header = t.headerRow.length ? [t.headerRow.join(" | ")] : [];
+        const body = t.rows.map((r) => r.map((c) => c.text).join(" | "));
+        return header.concat(body).join("\n");
+      })
       .join("\n");
   }
   if (scope === "table-column-head") {

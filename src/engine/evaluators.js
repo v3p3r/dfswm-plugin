@@ -51,6 +51,31 @@ function escapeRegExp(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Derive the search/replacement pair for an applyRegexFix autofix, or null
+ * when the rule declares no replacement and the pattern is not one of the
+ * known ones (never default to deleting matched text blindly).
+ * Rulesets may declare `autofix.replacement` directly.
+ */
+function regexFixFor(rule, params) {
+  if (rule.autofix && typeof rule.autofix.replacement === "string") {
+    return { pattern: params.pattern, replacement: rule.autofix.replacement };
+  }
+  if (params.pattern === "[,;:.!?] {2,}") {
+    // Keep the punctuation, collapse the following run of spaces.
+    return { pattern: "([,;:.!?]) {2,}", replacement: "$1 " };
+  }
+  if (/\\bmidnight\\b/i.test(params.pattern)) {
+    return { pattern: params.pattern, replacement: "0000 hours" };
+  }
+  if (params.pattern === "\\b[A-Z]{2,}\\.") {
+    // Only strip full stops clearly inside a sentence (followed by a space
+    // plus lower-case/digit); never sentence-final full stops.
+    return { pattern: "\\b([A-Z]{2,})\\.(?=\\s+[a-z0-9])", replacement: "$1" };
+  }
+  return null;
+}
+
 const EVALUATORS = {};
 
 /* ------------------------------------------------------------------ */
@@ -135,6 +160,7 @@ EVALUATORS["italic"] = (model, rule) => {
   if (!bad.length) return [];
   return [finding(rule, "Quoted text or publication titles should be italicised.", {
     locations: bad.slice(0, 10).map((p) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
+    fix: expected ? { action: "setItalic", params: { italic: true } } : null,
   })];
 };
 
@@ -229,9 +255,12 @@ EVALUATORS["keep-with-next"] = (model, rule) => {
   const scope = paragraphsForScope(model, rule.check.scope);
   const bad = scope.filter((p) => p.text.trim() && (keepWithNext ? !p.keepWithNext : !p.keepPrevious));
   if (!bad.length) return [];
+  const fixParams = {};
+  if (keepWithNext) fixParams.keepWithNext = true;
+  if (keepWithPrevious) fixParams.keepWithPrevious = true;
   return [finding(rule, `${bad.length} item(s) are at risk of being stranded at a page boundary (hanging heading / orphaned signature).`, {
     locations: bad.slice(0, 10).map((p) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
-    fix: { action: "keepWithNext", params: { keepWithNext } },
+    fix: { action: "keepWithNext", params: fixParams },
   })];
 };
 
@@ -290,9 +319,11 @@ EVALUATORS["heading-style"] = (model, rule) => {
     if (list.length) issues.push({ p, list });
   }
   if (!issues.length) return [];
+  const fixParams = { ...params };
+  if (params.sizeOffsetPoints && bodySize != null) fixParams.size = bodySize + params.sizeOffsetPoints;
   return [finding(rule, `${issues.length} heading(s) do not conform: ${issues[0].list.join("; ")}.`, {
     locations: issues.map(({ p }) => ({ paragraphIndex: p.index, snippet: p.text.slice(0, 80) })),
-    fix: { action: "fixHeading", params },
+    fix: { action: "fixHeading", params: fixParams },
   })];
 };
 
@@ -470,8 +501,9 @@ EVALUATORS["regex"] = (model, rule) => {
   const expect = params.expect || "present";
 
   if (expect === "absent" && found) {
+    const fixParams = !params.mustBeBold && rule.autofix && rule.autofix.available ? regexFixFor(rule, params) : null;
     return [finding(rule, `Found forbidden text matching '${params.pattern}': "${String(matches[0]).slice(0, 60)}".`, {
-      fix: params.mustBeBold ? null : rule.autofix && rule.autofix.available ? { action: "applyRegexFix", params: { pattern: params.pattern } } : null,
+      fix: fixParams ? { action: "applyRegexFix", params: fixParams } : null,
     })];
   }
   if (expect === "present" && !found) {

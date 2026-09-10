@@ -10,7 +10,7 @@
     "icons": "node scripts/generate-icons.js",
     "build:browser": "node scripts/build-browser.js",
     "dev": "npm run build && node scripts/dev-server.js",
-    "test": "node --test test/engine.test.js test/presentation.test.js",
+    "test": "node --test test/engine.test.js test/presentation.test.js test/evaluators.test.js",
     "validate:rulesets": "python3 ../dfswm-rulesets/scripts/validate_rulesets.py",
     "build": "npm run sync:rulesets && npm run icons && npm run build:browser"
   },
